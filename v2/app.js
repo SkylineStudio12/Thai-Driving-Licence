@@ -218,7 +218,7 @@ function viewOverview(v){
   const sc = el(`<div class="card streak"><div class="row between" style="align-items:flex-start">
       <div><b style="font-size:17px">${st ? `${st}-day streak` : 'Start your streak'}</b>
       <div class="muted small">${S.goal} questions daily · ${Math.min(today, S.goal)}/${S.goal} today</div></div>
-      <button class="btn sm secondary" id="eg">Edit goal ${lucide('chevron-right')}</button></div>
+      <button class="btn sm secondary chipbtn" id="eg">Edit goal ${lucide('chevron-right')}</button></div>
     <div class="days">${wk.map(d => `<div class="day ${d.met ? 'met' : ''} ${d.today ? 'today' : ''} ${d.future ? 'future' : ''}"><b>${d.date}</b><span>${d.dow}</span></div>`).join('')}</div></div>`);
   sc.querySelector('#eg').onclick = editGoal;
   v.appendChild(sc);
