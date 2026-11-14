@@ -111,11 +111,16 @@ function editDetails(){
     <button class="btn" id="ok" style="margin-top:8px">Save</button>`,
     d => d.querySelector('#ok').onclick = () => { S.profile.name = d.querySelector('#nm').value.trim(); S.profile.examDate = d.querySelector('#ed').value; persist(); d.close(); render(); refreshSheet(); });
 }
+/* van and truck have no question bank yet, so they are shown but cannot be picked */
 const VEHICLES = [['moto', 'Motorcycle', 'motorbike', 'The motorcycle paper (car-only questions left out)'],
-                  ['car', 'Car', 'car', 'Includes the car-only questions too']];
+                  ['car', 'Car', 'car', 'Includes the car-only questions too'],
+                  ['truck', 'Truck', 'truck', 'Coming soon: no questions for this licence yet', true],
+                  ['van', 'Van / minibus', 'bus', 'Coming soon: no questions for this licence yet', true]];
+const vehicleChoices = cur => VEHICLES.map(([k, t, ic, sub, soon]) =>
+  `<button class="choice" data-v="${k}" aria-pressed="${cur === k}" ${soon ? 'disabled' : ''}>${lucide(ic)}<span>${t}<small>${sub}</small></span></button>`).join('');
 function editVehicle(){
   dialog(`<h2>Vehicle type</h2><p>Decides which questions appear in tests and exams.</p>
-    ${VEHICLES.map(([k, t, ic, sub]) => `<button class="choice" data-v="${k}" aria-pressed="${S.profile.vehicle === k}">${lucide(ic)}<span>${t}<small>${sub}</small></span></button>`).join('')}`,
+    ${vehicleChoices(S.profile.vehicle)}`,
     d => d.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { S.profile.vehicle = b.dataset.v; persist(); d.close(); render(); refreshSheet(); }));
 }
 
@@ -169,7 +174,7 @@ function viewOnboarding(v){
       <div class="field">${lucide('calendar')}<div class="grow"><label for="ed">Exam date (optional)</label><input id="ed" type="date" value="${esc(S.profile.examDate)}"></div></div>`,
     () => `<div class="pic">${ART[veh] ? `<img src="art/${ART[veh]}" alt="">` : art(veh, veh === 'car' ? 'car' : 'motorbike')}</div>
       <h2>Vehicle category</h2><p class="lead">Each test is built for the licence you are sitting.</p>
-      ${VEHICLES.map(([k, t, ic, sub]) => `<button class="choice" data-v="${k}" aria-pressed="${veh === k}">${lucide(ic)}<span>${t}<small>${sub}</small></span></button>`).join('')}`,
+      ${vehicleChoices(veh)}`,
     () => `<div class="pic">${art('goal', 'flame')}</div>
       <h2>Daily goal</h2><p class="lead">A little every day beats cramming. You can change this later.</p>
       <div class="goal-grid">${GOALS.map(g => `<button class="choice" data-g="${g}" aria-pressed="${g === S.goal}"><b>${g}</b><small>questions a day</small></button>`).join('')}</div>`

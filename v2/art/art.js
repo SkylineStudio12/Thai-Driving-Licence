@@ -4,6 +4,8 @@
           cat-<category> (cat-trf, cat-sign, ...),
           practice-theory, practice-signs, mock, result-pass, result-fail, onboarding, car, moto */
 const ART = {
-  car:  'car.webp',
-  moto: 'moto.webp'
+  car:   'car.webp',
+  moto:  'moto.webp',
+  van:   'van.webp',
+  truck: 'truck.webp'
 };

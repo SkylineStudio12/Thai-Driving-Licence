@@ -327,3 +327,5 @@ dialog .choice{background:var(--muted);box-shadow:none}
 .item.bad b,.item.bad .ico{color:var(--destructive)}
 a.item{text-decoration:none}
 .circle:disabled{opacity:.35;pointer-events:none}
+.choice:disabled{opacity:.5;cursor:default}
+.choice .lucide{width:22px;height:22px}
