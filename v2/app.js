@@ -134,7 +134,7 @@ addEventListener('keydown', e => { if (e.key === 'Escape' && !sheetWrap.hidden) 
 function refreshSheet(){
   const sh = $('#sheet'), left = daysUntil(S.profile.examDate);
   const row = (icon, label, end, fn, cls = '') => { const b = el(`<button class="item ${cls}"><span class="ico">${lucide(icon)}</span>
-      <span class="txt"><b>${label}</b></span><span class="end">${end || ''}${chev()}</span></button>`); b.onclick = fn; return b; };
+      <span class="txt"><b>${label}</b></span><span class="end">${end ? `<span class="val">${end}</span>` : ''}${chev()}</span></button>`); b.onclick = fn; return b; };
   const link = (icon, label, href) => el(`<a class="item" href="${href}"><span class="ico">${lucide(icon)}</span>
       <span class="txt"><b>${label}</b></span><span class="end">${lucide('external-link', 'chev')}</span></a>`);
   sh.innerHTML = `<button class="circle close" aria-label="Close">${lucide('x')}</button>
@@ -229,7 +229,7 @@ function viewOverview(v){
   const cs = catStats(S, c);
   v.appendChild(el(`<div class="h2">${S.lastCat ? 'Continue learning' : 'Start learning'}</div>`));
   const cc = el(`<button class="card continue">${art('continue', CAT_ICON[c])}<div class="grow"><h3>${CATS[c][0]}</h3>
-    <p>${CAT_DESC[c]}</p><div class="row"><div class="progress" style="flex:1"><i style="width:${pct(cs.seen, cs.n)}%"></i></div>
+    <p>${CAT_DESC[c]}</p><div class="row cmeta"><div class="progress" style="flex:1"><i style="width:${pct(cs.seen, cs.n)}%"></i></div>
     <b class="small">${pct(cs.seen, cs.n)}%</b></div></div>${chev()}</button>`);
   cc.onclick = () => { tab = 'theory'; open('cat', c); };
   v.appendChild(cc);
@@ -249,7 +249,7 @@ function viewTheory(v){
   TOPIC_GROUPS.forEach(t => {
     const done = t.cats.filter(c => catStats(S, c).done).length;
     const seen = t.cats.reduce((a, c) => a + catStats(S, c).seen, 0), all = t.cats.reduce((a, c) => a + catStats(S, c).n, 0);
-    const b = el(`<button class="card tile">${art('group-' + t.key, t.icon)}<h3>${t.title}</h3>
+    const b = el(`<button class="card tile">${art('group-' + t.key, t.icon)}<h3><span>${t.title}</span></h3>
       <div class="meta"><span>Topics</span><b>${done}/${t.cats.length}</b></div>
       <div class="progress"><i style="width:${pct(seen, all)}%"></i></div></button>`);
     b.onclick = () => open('group', t.key);
@@ -259,17 +259,17 @@ function viewTheory(v){
 }
 function viewGroup(v, key){
   const t = TOPIC_GROUPS.find(x => x.key === key);
-  chrome({title:t.title});
   const st = t.cats.map(c => catStats(S, c));
-  const n = st.reduce((a, x) => a + x.n, 0), seen = st.reduce((a, x) => a + x.seen, 0);
+  const n = st.reduce((a, x) => a + x.n, 0), seen = st.reduce((a, x) => a + x.seen, 0), sp = pct(seen, n);
+  chrome({title:t.title, right:[el(ring(sp, `${sp}% of this group's questions seen`))]});
   v.appendChild(el(`<div class="stats">${[['Topics', t.cats.length], ['Questions', n], ['Seen', seen], ['Not seen', n - seen]]
     .map(([l, x]) => `<div class="stat"><span>${l}</span><b>${x}</b></div>`).join('')}</div>`));
   t.cats.forEach((c, k) => {
     const s = st[k];
     const b = el(`<button class="card topic">${art('cat-' + c, CAT_ICON[c])}<div class="grow"><h3>${CATS[c][0]}</h3>
       <p>${S.showThai ? CATS[c][1] : CAT_DESC[c]}</p>
-      ${s.done ? `<span class="qcount done">${lucide('circle-check')} Completed</span>`
-               : `<span class="qcount">${lucide('circle-help')} ${s.seen}/${s.n} questions</span>`}</div>${chev()}</button>`);
+      ${s.done ? `<span class="qcount done"><i class="dot ok">${lucide('check')}</i>Completed</span>`
+               : `<span class="qcount"><i class="dot q">${lucide('circle-help')}</i>${s.seen}/${s.n} Questions</span>`}</div>${chev()}</button>`);
     b.onclick = () => open('cat', c);
     v.appendChild(b);
   });
@@ -280,7 +280,7 @@ const ring = (p, label) => `<span class="ring" role="img" aria-label="${label}">
   <circle cx="22" cy="22" r="19"/>${p ? `<circle class="on" cx="22" cy="22" r="19" pathLength="100" stroke-dasharray="${p} 100"/>` : ''}</svg><b>${p}%</b></span>`;
 function viewTestOptions(v, c){
   const s = catStats(S, c), seen = pct(s.seen, s.n);
-  chrome({title:'Practice', sub:'Test options', right:[el(ring(seen, `${seen}% of this topic's questions seen`))]});
+  chrome({title:'Practice', sub:'Test options', tabs:false, right:[el(ring(seen, `${seen}% of this topic's questions seen`))]});
   v.appendChild(el(`<div class="opt-head">${art('cat-' + c, CAT_ICON[c])}<h2>${CATS[c][0]}</h2>
     <button class="link" id="book">Theory book ${lucide('chevron-right')}</button></div>`));
   v.querySelector('#book').onclick = () => open('book', c);
@@ -381,11 +381,11 @@ function viewPractice(v){
   const g = el('<div class="grid2"></div>');
   [['practice-theory', 'book-open', 'Theory', 'Questions', done, p.length, () => startQuiz({kind:'random', n:20})],
    ['practice-signs', 'signpost', 'Road signs', 'Signs', sdone, signs.length, () => { tab = 'theory'; open('cat', 'sign'); }]]
-    .forEach(([slot, icon, t, l, a, b, fn]) => { const x = el(`<button class="card tile">${art(slot, icon)}<h3>${t}</h3>
+    .forEach(([slot, icon, t, l, a, b, fn]) => { const x = el(`<button class="card tile">${art(slot, icon)}<h3><span>${t}</span></h3>
       <div class="meta"><span>${l}</span><b>${a}/${b}</b></div><div class="progress"><i style="width:${pct(a, b)}%"></i></div></button>`); x.onclick = fn; g.appendChild(x); });
   v.appendChild(g);
   const m = el(`<button class="card continue">${art('mock', 'trophy')}<div class="grow"><h3>Mock exam</h3>
-    <p style="margin:2px 0 0">${TOTAL} questions, ${MINUTES} minutes, ${PASS} to pass. No feedback until you submit, like the real touchscreen test.</p></div>${chev()}</button>`);
+    <p>${TOTAL} questions, ${MINUTES} minutes, ${PASS} to pass. Marked at the end, like the real test.</p></div>${chev()}</button>`);
   m.onclick = () => startQuiz({kind:'exam'});
   v.appendChild(m);
   v.appendChild(el('<div class="h2">More to explore</div>'));
@@ -549,25 +549,28 @@ function viewReview(v){
 
 /* ================= My Progress ================= */
 let progTab = 'theory', progFilter = 'all', progMonth = null;
-function smoothPath(pts){
+/* Catmull-Rom curve through the points; control points are clamped to [lo, hi] so it never leaves the 0-100 band */
+function smoothPath(pts, lo = -Infinity, hi = Infinity){
   if (pts.length < 2) return '';
+  const c = v => Math.min(hi, Math.max(lo, v));
   let d = `M${pts[0][0]},${pts[0][1]}`;
   for (let k = 0; k < pts.length - 1; k++) {
     const p0 = pts[k - 1] || pts[k], p1 = pts[k], p2 = pts[k + 1], p3 = pts[k + 2] || p2;
-    d += ` C${p1[0] + (p2[0] - p0[0]) / 6},${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6},${p2[1] - (p3[1] - p1[1]) / 6} ${p2[0]},${p2[1]}`;
+    d += ` C${p1[0] + (p2[0] - p0[0]) / 6},${c(p1[1] + (p2[1] - p0[1]) / 6)} ${p2[0] - (p3[0] - p1[0]) / 6},${c(p2[1] - (p3[1] - p1[1]) / 6)} ${p2[0]},${p2[1]}`;
   }
   return d;
 }
 function chartSvg(points, passMark){
-  const W = 320, H = 190, L = 30, R = 8, T = 8, B = 20, y = v => T + (100 - v) / 100 * (H - T - B);
-  const xs = points.length > 1 ? points.map((_, k) => L + k * (W - L - R) / (points.length - 1)) : [L + (W - L - R) / 2];
+  const W = 320, H = 196, L = 34, R = 10, T = 10, B = 8, y = v => T + (100 - v) / 100 * (H - T - B);
+  const xs = points.length > 1 ? points.map((_, k) => L + 6 + k * (W - L - R - 12) / (points.length - 1)) : [L + (W - L - R) / 2];
   const pts = points.map((p, k) => [xs[k], y(p)]);
-  const line = smoothPath(pts);
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Scores over time">
-    ${[0, 20, 40, 60, 80, 100].map(g => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(g)}" y2="${y(g)}"/><text x="0" y="${y(g) + 4}">${g}</text>`).join('')}
-    <line class="pass" x1="${L}" x2="${W - R}" y1="${y(passMark)}" y2="${y(passMark)}"/>
-    ${line ? `<path class="area" d="${line} L${pts[pts.length - 1][0]},${y(0)} L${pts[0][0]},${y(0)} Z"/><path class="line" d="${line}"/>` : ''}
-    ${pts.map(([a, b]) => `<circle class="dot" cx="${a}" cy="${b}" r="4"/>`).join('')}</svg>`;
+  const line = smoothPath(pts, y(100), y(0));
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Scores over time, pass mark ${passMark}%">
+    <defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="f0"/><stop offset="1" class="f1"/></linearGradient></defs>
+    ${[0, 20, 40, 60, 80, 100].map(g => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(g)}" y2="${y(g)}"/><text x="${L - 10}" y="${y(g) + 4}" text-anchor="end">${g}</text>`).join('')}
+    <line class="pass" x1="${L}" x2="${W - R}" y1="${y(passMark)}" y2="${y(passMark)}"/><text class="pass-l" x="${W - R}" y="${y(passMark) - 5}" text-anchor="end">pass ${passMark}</text>
+    ${line ? `<path class="area" fill="url(#chartFill)" d="${line} L${pts[pts.length - 1][0]},${y(0)} L${pts[0][0]},${y(0)} Z"/><path class="line" d="${line}"/>` : ''}
+    ${pts.map(([a, b]) => `<circle class="dot" cx="${a}" cy="${b}" r="3.5"/>`).join('')}</svg>`;
 }
 function viewProgress(v){
   chrome({title:'My Progress', large:true, right:[avatarBtn()]});
@@ -590,20 +593,27 @@ function viewProgress(v){
   head.querySelector('select').onchange = e => { progFilter = e.target.value; render(); };
   v.appendChild(head);
   const passMark = progTab === 'exam' ? 90 : PRACTICE_PASS * 100;
-  const card = el(`<div class="card"><div class="chart-top"><span class="muted">Tests taken: <b style="color:var(--foreground)">${inMonth.length}</b></span>
-    <span class="pill">Passed: <b style="color:var(--foreground)">&nbsp;${pct(inMonth.filter(passed).length, inMonth.length)}%</b></span></div>
+  const card = el(`<div class="card chart-card"><div class="chart-top"><span>Tests taken: <b>${inMonth.length}</b></span>
+    ${inMonth.length ? `<span class="chip-stat">Passed: <b>${pct(inMonth.filter(passed).length, inMonth.length)}%</b></span>` : ''}</div>
     ${inMonth.length ? chartSvg(inMonth.map(a => pct(a.score, a.of)), passMark)
-                     : `<div class="empty">No ${progTab === 'exam' ? 'mock papers' : 'tests'} in ${mName(cur)} yet.</div>`}
-    <div class="months"><button id="pm">${lucide('chevron-left')} ${mName(prevM)}</button><b>${mName(cur)}</b>
-      <button id="nm" ${nextM > now ? 'disabled' : ''}>${mName(nextM)} ${lucide('chevron-right')}</button></div></div>`);
+                     : `<div class="chart-empty"><span class="ei">${lucide('chart-spline')}</span>
+                        <b>No ${progTab === 'exam' ? 'mock papers' : 'tests'} in ${mName(cur)}</b>
+                        <p>Take a test and your scores will chart here.</p>
+                        <button class="btn sm" id="go">Start a test ${lucide('chevron-right')}</button></div>`}
+    <div class="months"><button id="pm" aria-label="Previous month, ${mName(prevM)}">${lucide('chevron-left')} ${mName(prevM)}</button><b>${mName(cur)}</b>
+      <button id="nm" aria-label="Next month, ${mName(nextM)}" ${nextM > now ? 'disabled' : ''}>${mName(nextM)} ${lucide('chevron-right')}</button></div></div>`);
   card.querySelector('#pm').onclick = () => { progMonth = prevM; render(); };
   card.querySelector('#nm').onclick = () => { progMonth = nextM; render(); };
+  const goBtn = card.querySelector('#go');
+  if (goBtn) goBtn.onclick = () => progTab === 'exam' ? startQuiz({kind:'exam'})
+    : progTab === 'practice' ? startQuiz({kind:'random', n:20})
+    : open('cat', progFilter !== 'all' ? progFilter : S.lastCat && CATS[S.lastCat] ? S.lastCat : 'trf');
   v.appendChild(card);
   if (progTab === 'theory') {
     v.appendChild(el('<div class="h2">Mastered by topic</div>'));
     const c = el('<div class="card bars"></div>');
     Object.keys(CATS).forEach(k => { const s = catStats(S, k), m = pct(s.right, s.n);
-      c.appendChild(el(`<div class="row"><span>${CATS[k][0]}</span><div class="progress"><i style="width:${m}%"></i></div><b class="small">${m}%</b></div>`)); });
+      c.appendChild(el(`<div class="bar-row"><div class="bar-top"><span>${CATS[k][0]}</span><b>${m}%</b></div><div class="progress thin"><i style="width:${m}%"></i></div></div>`)); });
     v.appendChild(c);
   } else {
     const recent = att.slice(-8).reverse();
@@ -611,7 +621,7 @@ function viewProgress(v){
     v.appendChild(recent.length ? (() => { const g = el('<div class="list boxed"></div>');
       recent.forEach(a => g.appendChild(el(`<div class="item" style="cursor:default"><span class="ico" style="box-shadow:none;background:none">${lucide(passed(a) ? 'circle-check' : 'circle-x', passed(a) ? 'ok' : 'bad')}</span>
         <span class="txt"><b>${a.score}/${a.of} · ${pct(a.score, a.of)}%</b><span>${new Date(a.when).toLocaleString('en-GB', {dateStyle:'medium', timeStyle:'short'})}${a.imported ? ' · from the classic app' : ''}</span></span></div>`)));
-      return g; })() : el('<div class="card empty">Nothing here yet.</div>'));
+      return g; })() : el(`<div class="card empty">${art('', 'history')}<p>Your finished ${progTab === 'exam' ? 'mock papers' : 'tests'} will be listed here.</p></div>`));
   }
 }
 
