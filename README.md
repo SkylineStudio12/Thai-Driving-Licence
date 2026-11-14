@@ -2,7 +2,7 @@
 
 Live: https://ramidzpower.github.io/thai-moto-license/
 
-Open `index.html` in any browser. No server, no internet, no build. Works on a phone
+Open `index.html` in any browser. No server, no internet, no build. Styled with the shadcn/ui design system (neutral theme, light and dark), ported to plain CSS in `index.html`. Works on a phone
 (AirDrop the folder, or put it in iCloud Drive and open from Files).
 
 - **Mock exam** — 50 questions, 60-minute timer, no feedback until you submit, 45/50 to pass.
