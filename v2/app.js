@@ -51,12 +51,14 @@ addEventListener('popstate', e => {
 const backBtn = $('#backBtn');
 backBtn.innerHTML = lucide('chevron-left');
 backBtn.onclick = back;
-function chrome({title = '', large = false, right = [], bare = false, tabs = true}){
+function chrome({title = '', sub = '', large = false, right = [], bare = false, tabs = true}){
   document.body.classList.toggle('bare', bare);
   document.body.classList.toggle('no-tabs', !tabs);
   $('#topbar').hidden = bare;
   $('#topbar').classList.toggle('large', large);
   $('#title').textContent = title;
+  $('#topbar').classList.toggle('two-line', !!sub);
+  if (sub) $('#title').appendChild(el(`<small>${esc(sub)}</small>`));
   document.title = `${title || 'Theory Trainer'} · v2`;
   backBtn.hidden = large;
   const r = $('#tbRight'); r.innerHTML = '';
@@ -273,27 +275,30 @@ function viewGroup(v, key){
   });
 }
 let optMistakesOnly = false, optShuffle = true;
+/* small progress ring for the top bar: share of the category's questions seen */
+const ring = (p, label) => `<span class="ring" role="img" aria-label="${label}"><svg viewBox="0 0 44 44" aria-hidden="true">
+  <circle cx="22" cy="22" r="19"/>${p ? `<circle class="on" cx="22" cy="22" r="19" pathLength="100" stroke-dasharray="${p} 100"/>` : ''}</svg><b>${p}%</b></span>`;
 function viewTestOptions(v, c){
-  chrome({title:'Practice', right:[]});
-  const s = catStats(S, c);
+  const s = catStats(S, c), seen = pct(s.seen, s.n);
+  chrome({title:'Practice', sub:'Test options', right:[el(ring(seen, `${seen}% of this topic's questions seen`))]});
   v.appendChild(el(`<div class="opt-head">${art('cat-' + c, CAT_ICON[c])}<h2>${CATS[c][0]}</h2>
     <button class="link" id="book">Theory book ${lucide('chevron-right')}</button></div>`));
   v.querySelector('#book').onclick = () => open('book', c);
-  v.appendChild(el(`<div class="card"><div class="label" style="margin-top:0">Your answers</div><div class="triple">
-    <div><span>${lucide('circle-help')} Questions</span><b>${s.n}</b></div>
-    <div><span class="ok">${lucide('circle-check')} Correct</span><b>${s.right}</b></div>
-    <div><span class="bad">${lucide('circle-x')} Incorrect</span><b>${s.wrong}</b></div></div></div>`));
-  v.appendChild(el('<div class="label">Additional settings</div>'));
-  const set = el(`<div class="settings">
-    <label class="setting">Show only mistaken questions<span class="switch"><input type="checkbox" id="om" ${optMistakesOnly ? 'checked' : ''}><i></i></span></label>
-    <label class="setting">Shuffle questions<span class="switch"><input type="checkbox" id="sh" ${optShuffle ? 'checked' : ''}><i></i></span></label>
-    <label class="setting">Show Thai text<span class="switch"><input type="checkbox" id="th" ${S.showThai ? 'checked' : ''}><i></i></span></label></div>`);
-  v.appendChild(set);
+  const sheet = el(`<section class="opt-sheet"><div class="label">Your answers</div><div class="triple">
+    <div><span><i class="dot q">${lucide('circle-help')}</i>Questions</span><b>${s.n}</b></div>
+    <div><span><i class="dot ok">${lucide('check')}</i>Correct</span><b>${s.right}</b></div>
+    <div><span><i class="dot bad">${lucide('x')}</i>Incorrect</span><b>${s.wrong}</b></div></div>
+    <div class="label">Additional settings</div>
+    <div class="settings">
+    <label class="setting">Show only mistaken questions<span class="switch"><input type="checkbox" role="switch" id="om" ${optMistakesOnly ? 'checked' : ''}><i></i></span></label>
+    <label class="setting">Shuffle questions<span class="switch"><input type="checkbox" role="switch" id="sh" ${optShuffle ? 'checked' : ''}><i></i></span></label>
+    <label class="setting">Show Thai text<span class="switch"><input type="checkbox" role="switch" id="th" ${S.showThai ? 'checked' : ''}><i></i></span></label></div></section>`);
+  v.appendChild(sheet);
   const startBtn = el(`<div class="sticky-cta"><button class="btn">Start test</button></div>`);
   const upd = () => { const none = optMistakesOnly && !s.wrong; startBtn.firstChild.disabled = none; startBtn.firstChild.textContent = none ? 'No mistakes to practise' : 'Start test'; };
-  set.querySelector('#om').onchange = e => { optMistakesOnly = e.target.checked; upd(); };
-  set.querySelector('#sh').onchange = e => { optShuffle = e.target.checked; };
-  set.querySelector('#th').onchange = e => { S.showThai = e.target.checked; persist(); };
+  sheet.querySelector('#om').onchange = e => { optMistakesOnly = e.target.checked; upd(); };
+  sheet.querySelector('#sh').onchange = e => { optShuffle = e.target.checked; };
+  sheet.querySelector('#th').onchange = e => { S.showThai = e.target.checked; persist(); };
   startBtn.firstChild.onclick = () => startQuiz({kind:'cat', cat:c, onlyMistakes:optMistakesOnly, shuffled:optShuffle});
   v.appendChild(startBtn); upd();
   S.lastCat = c; persist();
@@ -312,18 +317,22 @@ function viewRules(v){
 }
 
 /* Theory book: answers and reasons, one swipeable card at a time; viewing marks a question seen */
+const signPic = q => q.img ? `<div class="media"><img class="sign" src="../${q.img}" alt="Thai road sign ${esc(q.code || '')}"></div>` : '';
 function qCard(q, picked, opts = {}){
-  const c = el(`<div class="card">
-    ${q.img ? `<img class="sign" src="../${q.img}" alt="Thai road sign ${esc(q.code || '')}" style="display:block;width:130px;height:130px;object-fit:contain;background:#fff;border-radius:14px;padding:6px;margin:0 auto 12px;border:1px solid var(--border)">` : ''}
-    <b style="font-size:16.5px;line-height:1.4;display:block">${esc(q.en)}</b>
-    ${S.showThai ? `<div class="muted" style="margin-top:2px">${esc(q.th)}</div>` : ''}
+  const status = picked === undefined ? '' : picked === null ? ['skip', 'Not answered'] : picked === q.a ? ['ok', 'Correct'] : ['bad', 'Wrong'];
+  const c = el(`<article class="card qcard-r">
+    ${opts.n ? `<div class="qmeta"><span>Question ${opts.n}</span>${status ? `<span class="pill ${status[0]}">${status[1]}</span>` : ''}</div>` : ''}
+    ${signPic(q)}
+    <h3 class="qtext">${esc(q.en)}</h3>
+    ${S.showThai ? `<p class="th">${esc(q.th)}</p>` : ''}
     <div class="o"></div>
     <div class="why"><b>Why:</b> ${esc(q.w)}</div>
     ${q.note ? `<p class="small" style="color:var(--warning);margin:8px 0 0"><b>Heads up:</b> ${esc(q.note)}</p>` : ''}
-    ${q.src ? `<p class="small muted" style="margin:8px 0 0">Official source: ${esc(q.src)}</p>` : ''}</div>`);
+    ${q.src ? `<p class="small muted" style="margin:8px 0 0">Official source: ${esc(q.src)}</p>` : ''}</article>`);
   const box = c.querySelector('.o');
   q.o.forEach((o, k) => box.appendChild(el(`<div class="ans-opt ${k === q.a ? 'right' : k === picked ? 'wrong' : ''}">
-    <span class="k">${THAI_LETTERS[k]}</span><span>${esc(o[1])}${S.showThai ? `<small>${esc(o[0])}</small>` : ''}</span></div>`)));
+    <span class="k">${THAI_LETTERS[k]}</span><span class="t">${esc(o[1])}${S.showThai ? `<small>${esc(o[0])}</small>` : ''}</span>
+    ${k === q.a ? lucide('check', 'mk') : k === picked ? lucide('x', 'mk') : ''}</div>`)));
   return c;
 }
 let deck = null;
@@ -448,25 +457,28 @@ function finishQuiz(){
 function viewQuiz(v){
   chrome({bare:true, tabs:false});
   const z = quiz, q = z.qs[z.i], n = z.qs.length, picked = z.pick[z.i], locked = z.mode === 'practice' && picked !== null;
-  const page = el(`<div>
+  const isLast = z.i === n - 1, bm = S.bookmarks.includes(q.id);
+  const page = el(`<div class="quiz">
     <div class="qhead"><button class="circle" id="quit" aria-label="${z.mode === 'exam' ? 'Cancel exam' : 'Quit test'}">${lucide('power')}</button>
       <div class="mid"><b id="clock">--:--</b><span>${esc(z.title)} · ${n} questions</span></div>
-      <div class="row" style="gap:8px"><button class="circle" id="menu" aria-label="More">${lucide('ellipsis-vertical')}</button></div></div>
-    <div class="chips" id="chips"></div>
-    <div class="qcard">
-      ${q.img ? `<img class="sign" src="../${q.img}" alt="Thai road sign ${esc(q.code || '')}">` : ''}
-      <h2>${esc(q.en)}</h2>${S.showThai ? `<p class="th">${esc(q.th)}</p>` : ''}
-      <div id="opts"></div><div id="why"></div></div>
-    <div class="qfoot"><button class="circle" id="prev" aria-label="Previous question" ${z.i ? '' : 'disabled'}>${lucide('chevron-left')}</button>
-      <button class="circle ${S.showThai ? 'on' : ''}" id="thai" aria-label="${S.showThai ? 'Hide' : 'Show'} Thai text" aria-pressed="${S.showThai}">${lucide('languages')}</button>
-      <button class="circle ${S.bookmarks.includes(q.id) ? 'on' : ''}" id="bm" aria-label="Bookmark" aria-pressed="${S.bookmarks.includes(q.id)}">${lucide(S.bookmarks.includes(q.id) ? 'bookmark-check' : 'bookmark')}</button>
-      <button class="btn" id="next">${z.i === n - 1 ? (z.mode === 'exam' ? 'Submit' : 'Finish') : 'Next'} ${lucide('chevron-right')}</button></div></div>`);
+      <div class="tb-r"><button class="circle" id="menu" aria-label="More">${lucide('ellipsis')}</button></div></div>
+    <div class="chips" id="chips" role="list" aria-label="Questions"></div>
+    <section class="qsheet" aria-label="Question ${z.i + 1} of ${n}">
+      ${signPic(q)}
+      <h2 class="qtext">${esc(q.en)}</h2>${S.showThai ? `<p class="th">${esc(q.th)}</p>` : ''}
+      <div id="opts"></div><div id="why" aria-live="polite"></div>
+      <div class="qfoot"><button class="circle flat" id="prev" aria-label="Previous question" ${z.i ? '' : 'disabled'}>${lucide('chevron-left')}</button>
+        <button class="circle flat ${S.showThai ? 'on' : ''}" id="thai" aria-label="${S.showThai ? 'Hide' : 'Show'} Thai text" aria-pressed="${S.showThai}">${lucide('languages')}</button>
+        <button class="circle flat ${bm ? 'on' : ''}" id="bm" aria-label="Bookmark" aria-pressed="${bm}">${lucide(bm ? 'bookmark-check' : 'bookmark')}</button>
+        <button class="btn next" id="next">${isLast ? (z.mode === 'exam' ? 'Submit' : 'Finish') : 'Next'} ${lucide(isLast ? 'check' : 'play', isLast ? '' : 'fill')}</button></div>
+    </section></div>`);
   v.appendChild(page);
   /* number strip */
   const chips = $('#chips', page);
   z.qs.forEach((x, k) => {
     const p = z.pick[k], cls = k === z.i ? 'cur' : p === null ? '' : z.mode === 'exam' ? 'ans' : p === x.a ? 'right' : 'wrong';
-    const c = el(`<button class="chip ${cls}" aria-label="Question ${k + 1}">${k + 1}</button>`);
+    const state = {cur:', current', ans:', answered', right:', correct', wrong:', wrong'}[cls] || '';
+    const c = el(`<button class="chip ${cls}" role="listitem" aria-label="Question ${k + 1}${state}" ${k === z.i ? 'aria-current="step"' : ''}>${k + 1}</button>`);
     c.onclick = () => { z.i = k; render(); };
     chips.appendChild(c);
   });
@@ -476,7 +488,8 @@ function viewQuiz(v){
   q.o.forEach((o, k) => {
     const cls = locked ? (k === q.a ? 'right' : k === picked ? 'wrong' : '') : '';
     const b = el(`<button class="ans-opt ${cls}" aria-pressed="${!locked && picked === k}" ${locked ? 'disabled' : ''}>
-      <span class="k">${THAI_LETTERS[k]}</span><span>${esc(o[1])}${S.showThai ? `<small>${esc(o[0])}</small>` : ''}</span></button>`);
+      <span class="k">${THAI_LETTERS[k]}</span><span class="t">${esc(o[1])}${S.showThai ? `<small>${esc(o[0])}</small>` : ''}</span>
+      ${locked && k === q.a ? lucide('check', 'mk') : locked && k === picked ? lucide('x', 'mk') : ''}</button>`);
     b.onclick = () => {
       z.pick[z.i] = k;
       if (z.mode === 'practice') { record(S, q.id, k === q.a); persist(); }
@@ -515,23 +528,23 @@ function viewResult(v){
   const z = quiz, r = z.result, a = z.attempt, ok = passed(a), mark = z.mode === 'exam' ? 90 : PRACTICE_PASS * 100, p = pct(r.score, r.of);
   const restart = el(`<button class="textbtn">Restart</button>`);
   restart.onclick = () => startQuiz({...z.cfg, qs:z.qs}, true);
-  chrome({title:'Results', right:[restart]});
+  chrome({title:'Results', right:[restart], tabs:false});
   v.appendChild(el(`<div class="result">${art(ok ? 'result-pass' : 'result-fail', ok ? 'trophy' : 'target')}
     <h2>${ok ? (z.mode === 'exam' ? 'Exam passed!' : 'Test passed!') : 'Not passed yet'}</h2>
     <p>${r.score} of ${r.of} correct. ${ok ? 'Nice work, keep the streak going.' : `You need ${Math.ceil(r.of * mark / 100)} to pass. Review the mistakes and try again.`}</p>
     <div class="scale"><div class="ends"><span>0</span><b>${p}%</b><span>100</span></div>
-      <div class="track ${ok ? '' : 'fail'}"><i style="width:${Math.max(p, 2)}%"></i><span class="mark" style="left:${mark}%"></span></div>
+      <div class="track ${ok ? '' : 'fail'}" role="img" aria-label="Score ${p}%, pass mark ${mark}%"><i style="width:${Math.max(p, 3)}%"></i><span class="mark" style="left:calc(5px + (100% - 10px) * ${mark / 100})"></span></div>
       <div class="cap">${z.mode === 'exam' ? 'Exam' : 'Practice'} pass mark: ${mark}%</div></div></div>`));
-  const two = el(`<div class="two"><button class="btn secondary" id="rv">Review answers</button><button class="btn" id="nx">Next test</button></div>`);
+  const two = el(`<div class="two pinned"><button class="btn secondary" id="rv">Review answers</button><button class="btn" id="nx">Next test</button></div>`);
   two.querySelector('#rv').onclick = () => open('review');
   two.querySelector('#nx').onclick = () => startQuiz(z.cfg, true);
   v.appendChild(two);
 }
 function viewReview(v){
-  const z = quiz, wrong = z.qs.map((q, k) => [q, z.pick[k]]).filter(([q, p]) => p !== q.a);
-  chrome({title:'Review answers'});
-  v.appendChild(el(`<p class="muted" style="margin:6px 2px">${wrong.length ? `${wrong.length} to learn from. Each one is also in Mistakes until you get it right.` : 'Every answer was right.'}</p>`));
-  wrong.forEach(([q, p]) => v.appendChild(qCard(q, p)));
+  const z = quiz, wrong = z.qs.map((q, k) => [q, z.pick[k], k]).filter(([q, p]) => p !== q.a);
+  chrome({title:'Review answers', sub:`${z.result.score} of ${z.result.of} correct`, tabs:false});
+  v.appendChild(el(`<p class="muted review-lead">${wrong.length ? `${wrong.length} to learn from. Each one is also in Mistakes until you get it right.` : 'Every answer was right.'}</p>`));
+  wrong.forEach(([q, p, k]) => v.appendChild(qCard(q, p, {n:k + 1})));
 }
 
 /* ================= My Progress ================= */
