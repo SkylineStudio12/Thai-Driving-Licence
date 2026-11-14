@@ -7,7 +7,7 @@ Open `index.html` in any browser. No server, no internet, no build. Styled with 
 
 - **Mock exam** — 50 questions, 60-minute timer, no feedback until you submit, 45/50 to pass.
   Every wrong answer comes back with an explanation, and you can re-drill just those.
-- **Study** — the whole bank by category, answers and reasons shown, six questions to a page with numbered navigation.
+- **Study** — the whole bank by category, answers and reasons shown, one question card at a time: swipe left or right (or use the arrows / arrow keys) to move between them.
 - **Alcohol & drugs · Fitness to ride · First aid** — three new categories covering the topics you
   remembered from the real exam: the alcohol limits, whether a given medical condition disqualifies
   you, and which casualty carry suits which injury.
