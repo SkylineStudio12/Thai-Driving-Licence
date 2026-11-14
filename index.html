@@ -167,8 +167,9 @@ label.row input{margin-top:4px}
   border-radius:var(--radius);padding:10px;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .list button+button{position:relative}
 .list button+button::before{content:"";position:absolute;top:0;left:56px;right:10px;border-top:1px solid var(--border)}
-.list button:hover{background:var(--accent-bg)}
-.list button:hover::before,.list button:hover+button::before{border-color:transparent}
+@media (hover:hover){.list button:hover{background:var(--accent-bg)}
+.list button:hover::before,.list button:hover+button::before{border-color:transparent}}
+.list button:active{background:var(--accent-bg)}
 .list .ico{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:36px;height:36px;
   border-radius:calc(var(--radius) - 2px);background:var(--muted);color:var(--foreground)}
 .list .ico svg{width:18px;height:18px}
@@ -439,7 +440,8 @@ const PAGES = {
   signs:   {title:'Signs', icon:'signpost', view: v => viewSigns(v), meta: () => {
     const s = navState();
     if (signsSub() === 'rules') return {title:'General rules'};
-    if (signsSub() === 'fam') return {title: FAM_TITLE[s.fam][0]};
+    if (signsSub() === 'group') return {title: SIGN_GROUPS.find(g => g.key === s.group).title};
+    if (signsSub() === 'fam') return {title: famName(s.fam)};
     return {};
   }},
   numbers: {title:'Key numbers', icon:'hash', view: v => viewNumbers(v)},
@@ -561,7 +563,11 @@ backBtn.innerHTML = lucide('chevron-left');
 const canGoUp = () => !!navState().sub && tab !== 'mock';
 backBtn.onclick = () => {
   if (navState().d > 0) { history.back(); return; }
-  if (canGoUp()) { history.replaceState({tab, d:0}, '', '#' + tab); render(); scrollTo(0,0); }
+  if (!canGoUp()) return;
+  const s = navState(), g = s.sub === 'fam' && famGroup(s.fam);
+  if (g && g.fams.length > 1) history.replaceState({tab:'signs', sub:'group', group:g.key, d:0}, '', '#signs/' + g.key);
+  else history.replaceState({tab, d:0}, '', '#' + tab);
+  render(); scrollTo(0,0);
 };
 function renderChrome(){
   const page = PAGES[tab], meta = (page.meta && page.meta()) || {};
@@ -918,29 +924,60 @@ const FAM_TITLE = {
 /* Signs tab: a "General rules" entry, then the sign families as a list; each opens its own
    screen ({tab:'signs', sub:'rules'} or {tab:'signs', sub:'fam', fam}; hash #signs/rules, #signs/<fam>). */
 const signsSub = () => { const s = navState();
-  return s.tab !== 'signs' ? null : s.sub === 'rules' ? 'rules' : s.sub === 'fam' && FAM_TITLE[s.fam] ? 'fam' : null; };
-function openSigns(sub, fam){
-  history.pushState({tab:'signs', sub, fam, d:navState().d + 1}, '', '#signs/' + (fam || sub));
+  return s.tab !== 'signs' ? null : s.sub === 'rules' ? 'rules' : s.sub === 'fam' && FAM_TITLE[s.fam] ? 'fam'
+    : s.sub === 'group' && SIGN_GROUPS.some(g => g.key === s.group) ? 'group' : null; };
+/* the 24 families, grouped by the kind of sign; a group with one family opens that family directly */
+const SIGN_GROUPS = [
+  {key:'regulatory', title:'Regulatory', th:'ป้ายบังคับ', img:'bo-01', desc:'Must and must-not: right of way, bans, limits, commands',
+   fams:['priority','prohibit','noturn','novehicle','speed','limit','direction','lane','endzone']},
+  {key:'warning', title:'Warning', th:'ป้ายเตือน', img:'to-11', desc:'Yellow diamonds and markers: what is coming up',
+   fams:['curve','junction','narrow','rail','gradient','surface','laneflow','uturn','aheadwarn','people','marker']},
+  {key:'roadworks', title:'Roadworks', th:'ป้ายในงานก่อสร้าง', img:'tg-03', desc:'Orange, temporary: pictograms, diversions, text signs',
+   fams:['workwarn','divert','work']},
+  {key:'guide', title:'Guide & information', th:'ป้ายแนะนำ', img:null, desc:'Directions, places and services',
+   fams:['guide']}
+];
+const famGroup = f => SIGN_GROUPS.find(g => g.fams.includes(f));
+/* inside a group the "Warning: " / "Roadworks: " prefix is already said by the group */
+const famName = f => { const n = FAM_TITLE[f][0].replace(/^(Warning|Roadworks): /, ''); return n[0].toUpperCase() + n.slice(1); };
+const famSigns = f => SIGNS.filter(s => s.fam === f);
+function openSigns(sub, fam, group){
+  history.pushState({tab:'signs', sub, fam, group, d:navState().d + 1}, '', '#signs/' + (fam || group || sub));
   render(); scrollTo(0,0);
 }
 const chev = () => lucide('chevron-right').replace('class="lucide', 'class="chev lucide');
 function viewSigns(v){
   if (signsSub() === 'rules') return viewSignRules(v);
   if (signsSub() === 'fam') return viewSignFamily(v, navState().fam);
+  if (signsSub() === 'group') return viewSignGroup(v, navState().group);
   const top = el('<div class="card list"></div>');
   const r = el(`<button><span class="ico">${lucide('layers')}</span>
     <span class="txt"><b>General rules</b><span>Shape and colour logic · start here</span></span>${chev()}</button>`);
   r.onclick = () => openSigns('rules');
   top.appendChild(r);
   v.appendChild(top);
-  v.appendChild(el(`<div class="section-head"><h2>Sign families</h2>
-    <p>Grouped by the families the exam confuses on purpose. ${SIGNS.length} signs in all.</p></div>`));
+  v.appendChild(el(`<div class="section-head"><h2>Sign groups</h2>
+    <p>${SIGNS.length} signs, as the real DLT artwork.</p></div>`));
   const list = el('<div class="card list"></div>');
-  Object.keys(FAM_TITLE).forEach(f => {
-    const inFam = SIGNS.filter(s => s.fam === f);
-    if (!inFam.length) return;
+  SIGN_GROUPS.forEach(g => {
+    const n = g.fams.reduce((a, f) => a + famSigns(f).length, 0);
+    const img = g.img ? `signs/${g.img}.png` : famSigns(g.fams[0])[0].img;
+    const b = el(`<button><img class="thumb" src="${img}" alt="" loading="lazy">
+      <span class="txt"><b>${g.title}</b><span>${showThai ? g.th : g.desc}</span></span>
+      <span class="count">${n}</span>${chev()}</button>`);
+    b.onclick = () => g.fams.length === 1 ? openSigns('fam', g.fams[0]) : openSigns('group', null, g.key);
+    list.appendChild(b);
+  });
+  v.appendChild(list);
+}
+function viewSignGroup(v, key){
+  const g = SIGN_GROUPS.find(x => x.key === key);
+  v.appendChild(el(`<p class="sub" style="margin:16px 0 0">${showThai ? g.th + ' · ' : ''}${g.desc}</p>`));
+  const list = el('<div class="card list"></div>');
+  g.fams.forEach(f => {
+    const inFam = famSigns(f);
     const b = el(`<button><img class="thumb" src="${inFam[0].img}" alt="" loading="lazy">
-      <span class="txt"><b>${FAM_TITLE[f][0]}</b>${showThai ? `<span>${FAM_TITLE[f][1]}</span>` : ''}</span>
+      <span class="txt"><b>${famName(f)}</b>${showThai ? `<span>${FAM_TITLE[f][1]}</span>` : ''}</span>
       <span class="count">${inFam.length}</span>${chev()}</button>`);
     b.onclick = () => openSigns('fam', f);
     list.appendChild(b);
@@ -972,13 +1009,13 @@ function viewSignRules(v){
     <div class="art${r.imgs.length > 2 ? ' three' : ''}">${r.imgs.map(i => `<img src="signs/${i}.png" alt="">`).join('')}</div>
     <div class="txt"><div class="top"><h3>${r.title}</h3><span class="badge">${r.badge}</span></div>
       <p>${showThai && r.th ? `<span class="th">${r.th}.</span> ` : ''}${r.text}</p></div></div>`)));
-  const go2 = el(`<p class="callout">${lucide('info')}<span>The sign families on the Signs page are grouped
-    the way the exam confuses them on purpose. Each group is worth reading side by side.</span></p>`);
+  const go2 = el(`<p class="callout">${lucide('info')}<span>Within each group on the Signs page, signs are sorted
+    into the families the exam confuses on purpose. Each family is worth reading side by side.</span></p>`);
   v.appendChild(go2);
 }
 function viewSignFamily(v, f){
   const inFam = SIGNS.filter(s => s.fam === f);
-  v.appendChild(el(`<p class="sub" style="margin:16px 0 0">${showThai ? FAM_TITLE[f][1] + ' · ' : ''}${inFam.length} signs</p>`));
+  v.appendChild(el(`<p class="sub" style="margin:16px 0 0">${famGroup(f).title} · ${showThai ? FAM_TITLE[f][1] + ' · ' : ''}${inFam.length} signs</p>`));
   inFam.forEach(s => v.appendChild(el(
       `<div class="card"><div class="row" style="gap:16px;align-items:flex-start;flex-wrap:nowrap">
         ${signImg(s,96)}
@@ -1346,13 +1383,15 @@ function selftest(){
 const fromHash = location.hash.slice(1).split('/')[0];
 const hashParts = location.hash.slice(1).split('/');
 const fromCat = fromHash === 'study' && CATS[hashParts[1]] ? hashParts[1] : null;   // #study/trf/2
-const fromSigns = fromHash === 'signs' ? (hashParts[1] === 'rules' ? 'rules' : FAM_TITLE[hashParts[1]] ? 'fam' : null) : null;
+const fromSigns = fromHash === 'signs' ? (hashParts[1] === 'rules' ? 'rules' : FAM_TITLE[hashParts[1]] ? 'fam'
+  : SIGN_GROUPS.some(g => g.key === hashParts[1]) ? 'group' : null) : null;
 const fromPage = +hashParts[fromCat ? 2 : 1] || 1;       // #study/trf/2 opens page 2
 if (TABS.some(([k]) => k === fromHash)) tab = fromHash;
 if (pageNo[fromHash] !== undefined) pageNo[fromHash] = fromPage;
 if (fromCat) studyCat = fromCat;
 history.replaceState({tab, d:0, sub: fromHash.startsWith('exam') ? 'exam' : fromCat ? 'cat' : fromSigns || undefined,
-  cat: fromCat || undefined, fam: fromSigns === 'fam' ? hashParts[1] : undefined}, '', location.hash || '#' + tab);
+  cat: fromCat || undefined, fam: fromSigns === 'fam' ? hashParts[1] : undefined,
+  group: fromSigns === 'group' ? hashParts[1] : undefined}, '', location.hash || '#' + tab);
 if (location.search.includes('selftest')) selftest();
 /* #exam = straight into a fresh paper. #exam-sign, #exam-trf, … = one category
    under exam conditions; those are not written to history. */
