@@ -53,21 +53,41 @@ body{margin:0;background:var(--background);color:var(--foreground);
 .wrap{max-width:780px;margin:0 auto;padding:0 16px}
 #view{padding-bottom:80px}
 
-/* header + Tabs */
-header{position:sticky;top:0;z-index:9;border-bottom:1px solid var(--border);padding:16px 0 12px;
+/* header + Sheet (side menu) */
+header{position:sticky;top:0;z-index:9;border-bottom:1px solid var(--border);padding:12px 0;
   background:color-mix(in srgb,var(--background) 85%,transparent);
   -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-h1{font-size:18px;font-weight:600;margin:0 0 2px;letter-spacing:-.025em}
+.hrow{display:flex;align-items:center;gap:12px}
+.hrow>div{min-width:0}
+h1{font-size:17px;font-weight:600;margin:0;letter-spacing:-.025em;line-height:1.3}
 .sub{font-size:13px;color:var(--muted-foreground);margin:0 0 12px}
-nav{display:flex;width:fit-content;max-width:100%;gap:2px;overflow-x:auto;scrollbar-width:none;
-  background:var(--muted);border-radius:var(--radius);padding:3px}
-nav::-webkit-scrollbar{display:none}
-nav button{flex:0 0 auto;background:none;border:1px solid transparent;border-radius:calc(var(--radius) - 2px);
-  color:var(--muted-foreground);font:inherit;font-size:14px;font-weight:500;padding:5px 12px;cursor:pointer;
-  white-space:nowrap;transition:color .15s,background .15s,box-shadow .15s}
-nav button:hover{color:var(--foreground)}
-nav button[aria-selected=true]{color:var(--foreground);background:var(--background);box-shadow:var(--shadow-sm)}
-@media (prefers-color-scheme:dark){nav button[aria-selected=true]{background:var(--input);border-color:var(--input)}}
+header .sub{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;
+  border:1px solid var(--border);background:var(--background);color:var(--foreground);
+  border-radius:calc(var(--radius) - 2px);cursor:pointer;box-shadow:var(--shadow-xs);padding:0}
+.icon-btn:hover{background:var(--accent-bg)}
+.icon-btn.plain{border-color:transparent;box-shadow:none;background:none}
+.icon-btn svg{width:18px;height:18px}
+.overlay{position:fixed;inset:0;z-index:40;background:rgb(0 0 0 / .5);opacity:0;visibility:hidden;
+  transition:opacity .2s,visibility .2s}
+.sheet{position:fixed;top:0;left:0;bottom:0;z-index:50;width:min(300px,82vw);display:flex;flex-direction:column;
+  background:var(--background);border-right:1px solid var(--border);box-shadow:0 10px 15px -3px rgb(0 0 0 / .1),0 4px 6px -4px rgb(0 0 0 / .1);
+  transform:translateX(-100%);visibility:hidden;transition:transform .25s ease,visibility .25s;
+  padding:16px 12px calc(16px + env(safe-area-inset-bottom))}
+body.menu-open .overlay{opacity:1;visibility:visible}
+/* visibility flips at once on open so focus can move into the menu straight away */
+body.menu-open .sheet{transform:none;visibility:visible;transition:transform .25s ease,visibility 0s}
+body.menu-open{overflow:hidden}
+@media (prefers-reduced-motion:reduce){.overlay,.sheet{transition:none}}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px 12px 8px}
+.sheet-title{font-size:16px;font-weight:600;margin:0}
+.sheet-desc{font-size:13px;color:var(--muted-foreground);margin:2px 0 0}
+nav{display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+nav button{display:flex;align-items:center;width:100%;text-align:left;background:none;border:0;
+  border-radius:calc(var(--radius) - 2px);color:var(--muted-foreground);font:inherit;font-size:14px;font-weight:500;
+  padding:9px 12px;cursor:pointer;transition:color .15s,background .15s}
+nav button:hover{background:var(--accent-bg);color:var(--foreground)}
+nav button[aria-current=page]{background:var(--accent-bg);color:var(--foreground);font-weight:600}
 
 /* Card */
 .card{background:var(--card);color:var(--card-foreground);border:1px solid var(--border);
@@ -169,11 +189,28 @@ kbd{font:inherit;font-size:12px;font-weight:500;background:var(--muted);color:va
 </style>
 </head>
 <body>
-<header><div class="wrap">
-  <h1>Thai Motorcycle Licence — Theory Trainer</h1>
-  <p class="sub">ใบอนุญาตขับรถจักรยานยนต์ · 50 questions · 60 minutes · pass at 45 (90%)</p>
-  <nav id="nav" role="tablist"></nav>
+<header><div class="wrap hrow">
+  <button class="icon-btn" id="menuBtn" aria-label="Open menu" aria-haspopup="dialog" aria-controls="sheet" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>
+  </button>
+  <div>
+    <h1 id="pageTitle">Mock exam</h1>
+    <p class="sub">Thai Motorcycle Licence · ใบอนุญาตขับรถจักรยานยนต์ · 50 questions · 60 min · pass at 45</p>
+  </div>
 </div></header>
+<div class="overlay" id="overlay"></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" aria-hidden="true">
+  <div class="sheet-head">
+    <div>
+      <p class="sheet-title" id="sheetTitle">Theory Trainer</p>
+      <p class="sheet-desc">Thai motorcycle licence</p>
+    </div>
+    <button class="icon-btn plain" id="menuClose" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <nav id="nav" aria-label="Sections"></nav>
+</aside>
 <div class="wrap" id="view"></div>
 
 <script src="bank.js"></script>
@@ -261,19 +298,42 @@ let exam = null;                  // {qs, pick[], started, deadline, submitted}
 /* ---------- shell ---------- */
 const TABS = [['mock','Mock exam'],['study','Study'],['signs','Signs'],
               ['numbers','Key numbers'],['process','The process'],['phrases','Thai phrases'],['history','History']];
+/* side menu (shadcn Sheet): opens over the page from the left */
+function openMenu(){
+  document.body.classList.add('menu-open');
+  document.getElementById('sheet').setAttribute('aria-hidden', 'false');
+  document.getElementById('menuBtn').setAttribute('aria-expanded', 'true');
+  (document.querySelector('#nav [aria-current=page]') || document.getElementById('menuClose')).focus();
+}
+function closeMenu(){
+  if (!document.body.classList.contains('menu-open')) return;
+  document.body.classList.remove('menu-open');
+  document.getElementById('sheet').setAttribute('aria-hidden', 'true');
+  document.getElementById('menuBtn').setAttribute('aria-expanded', 'false');
+  document.getElementById('menuBtn').focus();
+}
+document.getElementById('menuBtn').onclick = openMenu;
+document.getElementById('menuClose').onclick = closeMenu;
+document.getElementById('overlay').onclick = closeMenu;
+document.addEventListener('keydown', e => {
+  if (!document.body.classList.contains('menu-open')) return;
+  if (e.key === 'Escape') { e.preventDefault(); closeMenu(); return; }
+  if (e.key !== 'Tab') return;           /* keep focus inside the open menu */
+  const f = [...document.querySelectorAll('#sheet button')];
+  const first = f[0], last = f[f.length-1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+
 function render(){
   const nav = document.getElementById('nav');
   nav.innerHTML = '';
   TABS.forEach(([k,label]) => {
     const b = document.createElement('button');
-    b.textContent = label; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', k===tab);
-    b.onclick = () => { tab = k; location.hash = k; render(); scrollTo(0,0); };
+    b.textContent = label;
+    if (k === tab) { b.setAttribute('aria-current', 'page'); document.getElementById('pageTitle').textContent = label; }
+    b.onclick = () => { closeMenu(); tab = k; location.hash = k; render(); scrollTo(0,0); };
     nav.appendChild(b);
-    /* keep the active tab visible when the tab list overflows on a phone */
-    if (k === tab) requestAnimationFrame(() => {
-      if (b.offsetLeft + b.offsetWidth > nav.scrollLeft + nav.clientWidth || b.offsetLeft < nav.scrollLeft)
-        nav.scrollLeft = b.offsetLeft - 8;
-    });
   });
   const v = document.getElementById('view');
   v.innerHTML = '';
