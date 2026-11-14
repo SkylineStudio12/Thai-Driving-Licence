@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Thai Motorcycle Licence — Theory Trainer</title>
 <style>
 /* Design system: shadcn/ui (New York, neutral base colour), ported to plain CSS so the app
@@ -51,44 +51,67 @@ body{margin:0;background:var(--background);color:var(--foreground);
   font:15px/1.6 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   -webkit-font-smoothing:antialiased}
 .wrap{max-width:780px;margin:0 auto;padding:0 16px}
-#view{padding-bottom:80px}
+#view{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
 
-/* header + Sheet (side menu) */
-header{position:sticky;top:0;z-index:9;border-bottom:1px solid var(--border);padding:12px 0;
+/* ---- page skeleton: top bar (back · title · action) + bottom tab bar ---- */
+.topbar{position:sticky;top:0;z-index:20;border-bottom:1px solid var(--border);
+  padding-top:env(safe-area-inset-top);
   background:color-mix(in srgb,var(--background) 85%,transparent);
   -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-.hrow{display:flex;align-items:center;gap:12px}
-.hrow>div{min-width:0}
-h1{font-size:17px;font-weight:600;margin:0;letter-spacing:-.025em;line-height:1.3}
+.topbar-row{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;min-height:56px}
+.topbar h1{grid-column:2;text-align:center;font-size:16px;font-weight:600;margin:0;letter-spacing:-.015em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-slot{display:flex}
+.tb-slot.end{justify-content:flex-end}
 .sub{font-size:13px;color:var(--muted-foreground);margin:0 0 12px}
-header .sub{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .icon-btn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;
-  border:1px solid var(--border);background:var(--background);color:var(--foreground);
-  border-radius:calc(var(--radius) - 2px);cursor:pointer;box-shadow:var(--shadow-xs);padding:0}
-.icon-btn:hover{background:var(--accent-bg)}
-.icon-btn.plain{border-color:transparent;box-shadow:none;background:none}
-.icon-btn svg{width:18px;height:18px}
-.overlay{position:fixed;inset:0;z-index:40;background:rgb(0 0 0 / .5);opacity:0;visibility:hidden;
-  transition:opacity .2s,visibility .2s}
-.sheet{position:fixed;top:0;left:0;bottom:0;z-index:50;width:min(300px,82vw);display:flex;flex-direction:column;
-  background:var(--background);border-right:1px solid var(--border);box-shadow:0 10px 15px -3px rgb(0 0 0 / .1),0 4px 6px -4px rgb(0 0 0 / .1);
-  transform:translateX(-100%);visibility:hidden;transition:transform .25s ease,visibility .25s;
-  padding:16px 12px calc(16px + env(safe-area-inset-bottom))}
-body.menu-open .overlay{opacity:1;visibility:visible}
-/* visibility flips at once on open so focus can move into the menu straight away */
-body.menu-open .sheet{transform:none;visibility:visible;transition:transform .25s ease,visibility 0s}
-body.menu-open{overflow:hidden}
-@media (prefers-reduced-motion:reduce){.overlay,.sheet{transition:none}}
-.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px 12px 8px}
-.sheet-title{font-size:16px;font-weight:600;margin:0}
-.sheet-desc{font-size:13px;color:var(--muted-foreground);margin:2px 0 0}
-nav{display:flex;flex-direction:column;gap:2px;overflow-y:auto}
-nav button{display:flex;align-items:center;width:100%;text-align:left;background:none;border:0;
-  border-radius:calc(var(--radius) - 2px);color:var(--muted-foreground);font:inherit;font-size:14px;font-weight:500;
-  padding:9px 12px;cursor:pointer;transition:color .15s,background .15s}
-nav button:hover{background:var(--accent-bg);color:var(--foreground)}
-nav button svg{flex:0 0 auto;width:16px;height:16px;margin-right:10px}
-nav button[aria-current=page]{background:var(--accent-bg);color:var(--foreground);font-weight:600}
+  border:1px solid transparent;background:none;color:var(--foreground);
+  border-radius:calc(var(--radius) - 2px);cursor:pointer;padding:0}
+.icon-btn:hover,.icon-btn[aria-expanded=true]{background:var(--accent-bg)}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn[hidden]{display:none}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;border-top:1px solid var(--border);
+  padding-bottom:env(safe-area-inset-bottom);
+  background:color-mix(in srgb,var(--background) 90%,transparent);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.tabbar-row{display:flex;max-width:780px;margin:0 auto;padding:0 4px}
+.tabbar button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:0;padding:8px 2px 7px;font:inherit;font-size:11px;font-weight:500;line-height:1.2;
+  color:var(--muted-foreground);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tabbar button span{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabbar button svg{width:22px;height:22px;stroke-width:1.75}
+.tabbar button:hover{color:var(--foreground)}
+.tabbar button[aria-current=page]{color:var(--foreground)}
+.tabbar button[aria-current=page] svg{stroke-width:2.25}
+
+/* DropdownMenu / Popover */
+.popover{position:fixed;z-index:60;min-width:200px;max-width:calc(100vw - 16px);padding:4px;
+  background:var(--card);color:var(--card-foreground);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:0 4px 6px -1px rgb(0 0 0 / .1),0 2px 4px -2px rgb(0 0 0 / .1);
+  animation:pop-in .12s ease-out}
+.popover[hidden]{display:none}
+@keyframes pop-in{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.popover{animation:none}}
+.popover .label{font-size:12px;font-weight:500;color:var(--muted-foreground);padding:6px 8px 4px}
+.popover button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;
+  border-radius:calc(var(--radius) - 4px);padding:7px 8px;font:inherit;font-size:14px;color:inherit;cursor:pointer}
+.popover button:hover,.popover button:focus-visible{background:var(--accent-bg);box-shadow:none}
+.popover button[aria-current=page]{font-weight:600}
+.popover button svg{flex:0 0 auto;width:16px;height:16px;color:var(--muted-foreground)}
+.popover button.danger,.popover button.danger svg{color:var(--destructive)}
+
+/* Dialog (help) */
+dialog.dlg{width:calc(100% - 32px);max-width:480px;max-height:calc(100dvh - 64px);padding:24px;margin:auto;
+  background:var(--background);color:var(--foreground);border:1px solid var(--border);
+  border-radius:calc(var(--radius) + 2px);box-shadow:0 10px 15px -3px rgb(0 0 0 / .1),0 4px 6px -4px rgb(0 0 0 / .1)}
+dialog.dlg::backdrop{background:rgb(0 0 0 / .5)}
+dialog.dlg h2{margin:0 32px 8px 0;font-size:18px}
+dialog.dlg .dlg-body{font-size:14.5px;color:var(--muted-foreground)}
+dialog.dlg .dlg-body p,dialog.dlg .dlg-body li{font-size:14.5px}
+dialog.dlg .dlg-body b{color:var(--foreground)}
+dialog.dlg .dlg-close{position:absolute;top:12px;right:12px;width:32px;height:32px;opacity:.7}
+dialog.dlg .dlg-close:hover{opacity:1}
+dialog.dlg .dlg-foot{display:flex;justify-content:flex-end;margin-top:20px}
 
 /* Card */
 .card{background:var(--card);color:var(--card-foreground);border:1px solid var(--border);
@@ -190,29 +213,23 @@ kbd{font:inherit;font-size:12px;font-weight:500;background:var(--muted);color:va
 </style>
 </head>
 <body>
-<header><div class="wrap hrow">
-  <button class="icon-btn" id="menuBtn" aria-label="Open menu" aria-haspopup="dialog" aria-controls="sheet" aria-expanded="false">
-    <svg class="lucide lucide-ellipsis-vertical" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-  </button>
-  <div>
-    <h1 id="pageTitle">Mock exam</h1>
-    <p class="sub">Thai Motorcycle Licence · ใบอนุญาตขับรถจักรยานยนต์ · 50 questions · 60 min · pass at 45</p>
-  </div>
+<!-- Page skeleton: every screen gets the same top bar (Back · title · optional action),
+     content in #view, and the section tab bar at the bottom. Screens describe themselves
+     in PAGES (see the script); the chrome is drawn by renderChrome(). -->
+<header class="topbar"><div class="wrap topbar-row">
+  <div class="tb-slot"><button class="icon-btn" id="backBtn" aria-label="Back" hidden></button></div>
+  <h1 id="pageTitle">Mock exam</h1>
+  <div class="tb-slot end" id="tbAction"></div>
 </div></header>
-<div class="overlay" id="overlay"></div>
-<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" aria-hidden="true">
-  <div class="sheet-head">
-    <div>
-      <p class="sheet-title" id="sheetTitle">Theory Trainer</p>
-      <p class="sheet-desc">Thai motorcycle licence</p>
-    </div>
-    <button class="icon-btn plain" id="menuClose" aria-label="Close menu">
-      <svg class="lucide lucide-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-    </button>
-  </div>
-  <nav id="nav" aria-label="Sections"></nav>
-</aside>
 <div class="wrap" id="view"></div>
+<nav class="tabbar" aria-label="Sections"><div class="tabbar-row" id="tabs"></div></nav>
+<div class="popover" id="popover" role="menu" hidden></div>
+<dialog class="dlg" id="helpDlg" aria-labelledby="helpTitle">
+  <h2 id="helpTitle"></h2>
+  <div class="dlg-body" id="helpBody"></div>
+  <div class="dlg-foot"><button class="btn" id="helpOk">Got it</button></div>
+  <button class="icon-btn dlg-close" id="helpClose" aria-label="Close"></button>
+</dialog>
 
 <script src="bank.js"></script>
 <script src="signs.js"></script>
@@ -305,53 +322,201 @@ const LUCIDE = {
   'hash': '<line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/>',
   'list-checks': '<path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/>',
   'languages': '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
-  'history': '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>'
+  'history': '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+  'chevron-left': '<path d="m15 18-6-6 6-6"/>',
+  'ellipsis': '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+  'ellipsis-vertical': '<circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>',
+  'circle-help': '<circle cx="12" cy="12" r="10"/><path d="M9 9.5a3 2.5 0 016 0c0 2-2 2-3 3.5"/><path d="M12 17h.01"/>',
+  'x': '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  'trash-2': '<path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  'log-out': '<path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>'
 };
 const lucide = n => `<svg class="lucide lucide-${n}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LUCIDE[n]}</svg>`;
-const TABS = [['mock','Mock exam','clipboard-check'],['study','Study','book-open'],['signs','Signs','signpost'],
-              ['numbers','Key numbers','hash'],['process','The process','list-checks'],['phrases','Thai phrases','languages'],
-              ['history','History','history']];
-/* side menu (shadcn Sheet): opens over the page from the left */
-function openMenu(){
-  document.body.classList.add('menu-open');
-  document.getElementById('sheet').setAttribute('aria-hidden', 'false');
-  document.getElementById('menuBtn').setAttribute('aria-expanded', 'true');
-  (document.querySelector('#nav [aria-current=page]') || document.getElementById('menuClose')).focus();
+/* ---- PAGES: one entry per section. To add a page: give it a key, a title, a Lucide icon
+   and a view(v) that fills the content area. meta() is optional and returns per-screen extras:
+     title  - overrides the top-bar title (e.g. while a paper is running)
+     help   - {title, body} adds a help button (circle-help) on the right that opens a dialog
+     menu   - [{label, icon, run, danger}] adds a kebab button on the right with those actions
+   The tab bar lists PAGES in this order; whatever does not fit goes under "More". */
+const PAGES = {
+  mock: {title:'Mock exam', icon:'clipboard-check', view: v => viewMock(v), meta: () =>
+    exam && !exam.submitted ? {title:`Paper · ${exam.i+1} of ${exam.qs.length}`, menu:[
+      {label: showThai ? 'Hide Thai text' : 'Show Thai text', icon:'languages', run: () => { showThai = !showThai; render(); }},
+      {label:'Leave this paper', icon:'log-out', danger:true, run: leaveExam}]}
+    : exam ? {title: exam.retry ? 'Retry result' : 'Result'}
+    : {help:{title:'How the mock exam works', body:`
+        <p><b>${TOTAL} questions, ${MINUTES} minutes, ${PASS} to pass</b> (90%), the same shape as the
+        DLT touchscreen test. You may get ${TOTAL-PASS} wrong, no more.</p>
+        <ul style="padding-left:20px;margin:0">
+          <li>No feedback until you submit. Unanswered questions count as wrong.</li>
+          <li>Picking an answer moves you to the next question; use Previous to change it.</li>
+          <li>Answers are labelled ก ข ค ง, as on the real screen.</li>
+          <li>Sign options are reshuffled every time, so you learn the sign, not the letter.</li>
+          <li>After submitting, every wrong answer comes back with the reason, and you can drill just those.</li>
+        </ul>`}}},
+  study:   {title:'Study', icon:'book-open', view: v => viewStudy(v), meta: () => ({help:{title:'Studying the bank', body:`
+        <p>Every question in the bank, by category, with the right answer and the reason shown.</p>
+        <p>Read a category end to end when the History page shows it below 90%.</p>`}})},
+  signs:   {title:'Signs', icon:'signpost', view: v => viewSigns(v)},
+  numbers: {title:'Key numbers', icon:'hash', view: v => viewNumbers(v)},
+  process: {title:'The process', icon:'list-checks', view: v => viewProcess(v)},
+  phrases: {title:'Thai phrases', icon:'languages', view: v => viewPhrases(v)},
+  history: {title:'History', icon:'history', view: v => viewHistory(v), meta: () =>
+    load().length ? {menu:[{label:'Clear history', icon:'trash-2', danger:true, run: clearHistory}]} : {}},
+};
+const TABS = Object.entries(PAGES).map(([k, p]) => [k, p.title, p.icon]);
+
+/* ---- navigation: each screen is a browser-history entry {tab, sub, d}, so Back (top bar,
+   browser or phone gesture) returns to the previous screen. d = depth; Back hides at 0. */
+const navState = () => history.state || {tab, d:0};
+function go(k){
+  closePopover();
+  if (k === tab && !(k === 'mock' && exam && exam.submitted)) { scrollTo(0,0); return; }
+  if (k === 'mock' && exam && exam.submitted) exam = null;   // a finished paper is not resumed
+  const sub = k === 'mock' && exam && !exam.submitted ? 'exam' : undefined;   // a running paper keeps going
+  history.pushState({tab:k, sub, d:navState().d + 1}, '', '#' + k);
+  tab = k; render(); scrollTo(0,0);
 }
-function closeMenu(){
-  if (!document.body.classList.contains('menu-open')) return;
-  document.body.classList.remove('menu-open');
-  document.getElementById('sheet').setAttribute('aria-hidden', 'true');
-  document.getElementById('menuBtn').setAttribute('aria-expanded', 'false');
-  document.getElementById('menuBtn').focus();
+function beginExam(ids){
+  const st = {tab:'mock', sub:'exam', d:navState().d + (navState().sub === 'result' ? 0 : 1)};
+  if (navState().sub === 'result') history.replaceState(st, '', '#mock');
+  else history.pushState(st, '', '#mock');
+  tab = 'mock'; startExam(ids); scrollTo(0,0);
 }
-document.getElementById('menuBtn').onclick = openMenu;
-document.getElementById('menuClose').onclick = closeMenu;
-document.getElementById('overlay').onclick = closeMenu;
-document.addEventListener('keydown', e => {
-  if (!document.body.classList.contains('menu-open')) return;
-  if (e.key === 'Escape') { e.preventDefault(); closeMenu(); return; }
-  if (e.key !== 'Tab') return;           /* keep focus inside the open menu */
-  const f = [...document.querySelectorAll('#sheet button')];
-  const first = f[0], last = f[f.length-1];
-  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+function finishExam(){
+  history.replaceState({...navState(), sub:'result'}, '', location.hash);
+  submit(); scrollTo(0,0);
+}
+function leaveExam(){
+  if (exam && !exam.submitted && !confirm('Leave this paper? Your answers will be lost.')) return;
+  if (navState().sub && navState().d > 0) { exam = exam && {...exam, submitted:true, left:true}; history.back(); return; }
+  exam = null; history.replaceState({tab:'mock', d:navState().d}, '', '#mock'); render();
+}
+function clearHistory(){
+  const h = load();
+  if (confirm('Delete all '+h.length+' recorded attempts? This cannot be undone.')) { localStorage.removeItem(KEY); render(); }
+}
+addEventListener('popstate', e => {
+  closePopover();
+  const s = e.state || {tab:'mock', d:0};
+  const toExam = s.tab === 'mock' && s.sub === 'exam';
+  if (exam && !exam.submitted && s.tab === 'mock' && !toExam) {
+    if (!confirm('Leave this paper? Your answers will be lost.')) {
+      history.pushState({tab:'mock', sub:'exam', d:s.d + 1}, '', '#mock'); return;
+    }
+    exam = null;
+  }
+  if (exam && exam.submitted && s.tab === 'mock' && s.sub !== 'result') exam = null;
+  tab = s.tab; render(); scrollTo(0,0);
 });
 
-function render(){
-  const nav = document.getElementById('nav');
-  nav.innerHTML = '';
-  TABS.forEach(([k,label,icon]) => {
-    const b = document.createElement('button');
-    b.innerHTML = lucide(icon) + `<span>${label}</span>`;
-    if (k === tab) { b.setAttribute('aria-current', 'page'); document.getElementById('pageTitle').textContent = label; }
-    b.onclick = () => { closeMenu(); tab = k; location.hash = k; render(); scrollTo(0,0); };
-    nav.appendChild(b);
+/* ---- popover (shadcn DropdownMenu): used by the kebab menu and the tab bar's More */
+let popAnchor = null;
+function openPopover(anchor, items, where){
+  const pop = document.getElementById('popover');
+  if (popAnchor === anchor) { closePopover(); return; }
+  closePopover();
+  pop.innerHTML = '';
+  items.forEach(it => {
+    if (it.heading) { pop.appendChild(el(`<div class="label">${it.heading}</div>`)); return; }
+    const b = el(`<button role="menuitem" class="${it.danger ? 'danger' : ''}">${lucide(it.icon)}<span>${esc(it.label)}</span></button>`);
+    if (it.current) b.setAttribute('aria-current', 'page');
+    b.onclick = () => { closePopover(true); it.run(); };
+    pop.appendChild(b);
   });
+  pop.hidden = false;
+  const r = anchor.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
+  pop.style.left = Math.max(8, Math.min(r.right - w, innerWidth - w - 8)) + 'px';
+  pop.style.top = (where === 'above' ? r.top - h - 6 : r.bottom + 6) + 'px';
+  pop.style.transformOrigin = where === 'above' ? 'bottom right' : 'top right';
+  popAnchor = anchor; anchor.setAttribute('aria-expanded', 'true');
+  (pop.querySelector('[aria-current]') || pop.querySelector('button')).focus();
+}
+function closePopover(keepFocus){
+  if (!popAnchor) return;
+  document.getElementById('popover').hidden = true;
+  popAnchor.setAttribute('aria-expanded', 'false');
+  if (!keepFocus && document.body.contains(popAnchor)) popAnchor.focus();
+  popAnchor = null;
+}
+document.addEventListener('pointerdown', e => {
+  if (popAnchor && !e.target.closest('#popover') && !popAnchor.contains(e.target)) closePopover(true);
+});
+document.addEventListener('keydown', e => {
+  if (!popAnchor) return;
+  if (e.key === 'Escape') { e.preventDefault(); closePopover(); return; }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const f = [...document.querySelectorAll('#popover button')], i = f.indexOf(document.activeElement);
+    f[(i + (e.key === 'ArrowDown' ? 1 : -1) + f.length) % f.length].focus();
+  }
+});
+addEventListener('resize', () => { closePopover(true); renderTabs(); });
+
+/* ---- help dialog (shadcn Dialog), native <dialog> for focus trapping and Escape */
+const helpDlg = document.getElementById('helpDlg');
+function openHelp(h){
+  document.getElementById('helpTitle').textContent = h.title;
+  document.getElementById('helpBody').innerHTML = h.body;
+  helpDlg.showModal();
+}
+document.getElementById('helpClose').innerHTML = lucide('x');
+document.getElementById('helpClose').onclick = () => helpDlg.close();
+document.getElementById('helpOk').onclick = () => helpDlg.close();
+helpDlg.addEventListener('click', e => { if (e.target === helpDlg) helpDlg.close(); });
+
+/* ---- chrome: top bar + tab bar */
+const backBtn = document.getElementById('backBtn');
+backBtn.innerHTML = lucide('chevron-left');
+backBtn.onclick = () => history.back();
+function renderChrome(){
+  const page = PAGES[tab], meta = (page.meta && page.meta()) || {};
+  const title = meta.title || page.title;
+  document.getElementById('pageTitle').textContent = title;
+  document.title = `${title} · Thai Motorcycle Licence`;
+  backBtn.hidden = !(navState().d > 0);
+  const slot = document.getElementById('tbAction');
+  slot.innerHTML = '';
+  if (meta.menu && meta.menu.length) {
+    const b = el(`<button class="icon-btn" aria-label="More actions" aria-haspopup="menu" aria-expanded="false">${lucide('ellipsis-vertical')}</button>`);
+    b.onclick = () => openPopover(b, meta.menu, 'below');
+    slot.appendChild(b);
+  } else if (meta.help) {
+    const b = el(`<button class="icon-btn" aria-label="Help" aria-haspopup="dialog">${lucide('circle-help')}</button>`);
+    b.onclick = () => openHelp(meta.help);
+    slot.appendChild(b);
+  }
+  renderTabs();
+}
+const TAB_MIN_WIDTH = 72;   // px per tab-bar item; below this the labels stop being readable
+function renderTabs(){
+  const row = document.getElementById('tabs');
+  const slots = Math.max(2, Math.floor(Math.min(innerWidth, 780) / TAB_MIN_WIDTH));
+  const fits = TABS.length <= slots;
+  const shown = fits ? TABS : TABS.slice(0, slots - 1), extra = fits ? [] : TABS.slice(slots - 1);
+  row.innerHTML = '';
+  shown.forEach(([k, label, icon]) => {
+    const b = el(`<button>${lucide(icon)}<span>${label}</span></button>`);
+    if (k === tab) b.setAttribute('aria-current', 'page');
+    b.onclick = () => go(k);
+    row.appendChild(b);
+  });
+  if (extra.length) {
+    const inExtra = extra.some(([k]) => k === tab);
+    const cur = inExtra ? extra.find(([k]) => k === tab) : null;
+    const b = el(`<button aria-haspopup="menu" aria-expanded="false">${lucide(cur ? cur[2] : 'ellipsis')}<span>${cur ? cur[1] : 'More'}</span></button>`);
+    if (inExtra) b.setAttribute('aria-current', 'page');
+    b.onclick = () => openPopover(b, extra.map(([k, label, icon]) => ({label, icon, current: k === tab, run: () => go(k)})), 'above');
+    row.appendChild(b);
+  }
+}
+
+function render(){
+  closePopover(true);
+  renderChrome();
   const v = document.getElementById('view');
   v.innerHTML = '';
-  ({mock:viewMock, study:viewStudy, signs:viewSigns, numbers:viewNumbers,
-    process:viewProcess, phrases:viewPhrases, history:viewHistory})[tab](v);
+  PAGES[tab].view(v);
 }
 
 function qText(q){
@@ -425,8 +590,8 @@ function viewMock(v){
       </div>
       <p class="sub" style="margin-top:14px">Bank: ${pool().length} questions available.</p>
     </div>`));
-    v.querySelector('#go').onclick = () => startExam(null);
-    const r = v.querySelector('#retry'); if (r) r.onclick = () => startExam(wrongIds);
+    v.querySelector('#go').onclick = () => beginExam(null);
+    const r = v.querySelector('#retry'); if (r) r.onclick = () => beginExam(wrongIds);
     v.querySelector('#th').onchange = e => { showThai = e.target.checked; };
     v.querySelector('#co').onchange = e => { excludeCarOnly = e.target.checked; render(); };
     v.appendChild(el(resourcesCard()));
@@ -446,7 +611,7 @@ function viewMock(v){
     ${qText(q)}
     <div id="opts"></div>
     <div class="row" style="justify-content:space-between;margin-top:14px">
-      <button class="btn ghost" id="prev" ${exam.i===0?'disabled':''}>&larr; Back</button>
+      <button class="btn ghost" id="prev" ${exam.i===0?'disabled':''}>&larr; Previous</button>
       <div class="row">
         <button class="btn ghost" id="skip">Skip</button>
         ${exam.i===n-1 ? '<button class="btn" id="submit">Submit paper</button>'
@@ -468,12 +633,12 @@ function viewMock(v){
   v.querySelector('#prev').onclick = () => { exam.i--; render(); };
   const nx = v.querySelector('#next'); if (nx) nx.onclick = () => { exam.i++; render(); };
   v.querySelector('#skip').onclick = () => { if (exam.i < n-1) { exam.i++; render(); } };
-  const sb = v.querySelector('#submit'); if (sb) sb.onclick = submit;
+  const sb = v.querySelector('#submit'); if (sb) sb.onclick = finishExam;
 
   const clock = v.querySelector('#clock');
   const paint = () => {
     const ms = exam.deadline - Date.now();
-    if (ms <= 0) { clearInterval(tick); submit(); return; }
+    if (ms <= 0) { clearInterval(tick); finishExam(); return; }
     const s = Math.floor(ms/1000);
     clock.textContent = String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
     clock.classList.toggle('low', s < 300);
@@ -526,10 +691,10 @@ function viewResult(v){
       <button class="btn ghost" id="done">Back</button>
     </div>
   </div>`));
-  v.querySelector('#again').onclick = () => startExam(null);
-  v.querySelector('#done').onclick  = () => { exam = null; render(); };
+  v.querySelector('#again').onclick = () => beginExam(null);
+  v.querySelector('#done').onclick  = leaveExam;
   const dr = v.querySelector('#dr');
-  if (dr) dr.onclick = () => startExam(r.wrong.map(w => w.id));
+  if (dr) dr.onclick = () => beginExam(r.wrong.map(w => w.id));
 
   if (r.wrong.length){
     v.appendChild(el(`<h2>What you got wrong (${r.wrong.length})</h2>`));
@@ -579,7 +744,7 @@ function pagerHtml(key, total){
 }
 function wirePagers(v, key){
   v.querySelectorAll(`[data-pager="${key}"] button`).forEach(b => b.onclick = () => {
-    pageNo[key] = +b.dataset.p; history.replaceState(null, '', `#${key}/${pageNo[key]}`);
+    pageNo[key] = +b.dataset.p; history.replaceState(navState(), '', `#${key}/${pageNo[key]}`);
     render(); scrollTo(0, 0);
   });
 }
@@ -928,13 +1093,6 @@ function viewHistory(v){
         <td class="${ok?'ok':'bad'}" style="font-weight:600">${ok?'pass':'fail'}</td></tr>`;
     }).reverse().join('')}</tbody></table></div>`));
 
-  const b = el('<div class="row"><button class="btn ghost" id="clr">Clear history</button></div>');
-  b.querySelector('#clr').onclick = () => {
-    if (confirm('Delete all '+h.length+' recorded attempts? This cannot be undone.')) {
-      localStorage.removeItem(KEY); render();
-    }
-  };
-  v.appendChild(b);
 }
 
 /* ---------- self-check: run with ?selftest ---------- */
@@ -1040,6 +1198,7 @@ const fromHash = location.hash.slice(1).split('/')[0];
 const fromPage = +location.hash.split('/')[1] || 1;       // #signs/3 opens page 3
 if (TABS.some(([k]) => k === fromHash)) tab = fromHash;
 if (pageNo[fromHash] !== undefined) pageNo[fromHash] = fromPage;
+history.replaceState({tab, d:0, sub: fromHash.startsWith('exam') ? 'exam' : undefined}, '', location.hash || '#' + tab);
 if (location.search.includes('selftest')) selftest();
 /* #exam = straight into a fresh paper. #exam-sign, #exam-trf, … = one category
    under exam conditions; those are not written to history. */
