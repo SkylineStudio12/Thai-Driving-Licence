@@ -148,6 +148,23 @@ label.row input{margin-top:4px}
 .opt.wrong{border-color:var(--destructive);background:var(--destructive-bg);box-shadow:0 0 0 1px var(--destructive)}
 .opt b{display:inline-block;min-width:1.4em;color:var(--muted-foreground);font-weight:500}
 
+/* List (item group): icon · label · chevron rows inside a card */
+.list{padding:4px;margin:16px 0}
+.list button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;
+  border-radius:var(--radius);padding:10px;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.list button+button{position:relative}
+.list button+button::before{content:"";position:absolute;top:0;left:56px;right:10px;border-top:1px solid var(--border)}
+.list button:hover{background:var(--accent-bg)}
+.list button:hover::before,.list button:hover+button::before{border-color:transparent}
+.list .ico{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:36px;height:36px;
+  border-radius:calc(var(--radius) - 2px);background:var(--muted);color:var(--foreground)}
+.list .ico svg{width:18px;height:18px}
+.list .txt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.list .txt b{font-weight:500;font-size:15px}
+.list .txt span{font-size:13px;color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list .count{flex:0 0 auto;font-size:13px;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.list .chev{flex:0 0 auto;width:16px;height:16px;color:var(--muted-foreground)}
+
 /* Alert */
 .why{background:var(--warning-bg);border:1px solid color-mix(in srgb,var(--warning) 35%,transparent);
   padding:12px 14px;border-radius:var(--radius);font-size:14.5px;margin:12px 0 0}
@@ -248,6 +265,8 @@ const CATS = {
   moto: ['Motorcycle',    'รถจักรยานยนต์'],
   proc: ['Exam & process','ขั้นตอนการสอบ']
 };
+/* Lucide icon per category, shown in the Study list */
+const CAT_ICON = {veh:'scale', trf:'route', sign:'triangle-alert', mark:'road', alco:'wine', fit:'heart-pulse', aid:'briefcase-medical', etq:'handshake', safe:'shield-check', maint:'wrench', moto:'motorbike', proc:'list-checks'};
 /* how many of each the mock aims for — shaped after the real 50-question paper */
 const QUOTA = {veh:7, trf:9, sign:8, mark:3, etq:5, safe:4, maint:4, moto:3, proc:2, alco:2, fit:2, aid:1};
 const KEY = 'thai-moto-progress';
@@ -329,7 +348,19 @@ const LUCIDE = {
   'circle-help': '<circle cx="12" cy="12" r="10"/><path d="M9 9.5a3 2.5 0 016 0c0 2-2 2-3 3.5"/><path d="M12 17h.01"/>',
   'x': '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
   'trash-2': '<path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
-  'log-out': '<path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>'
+  'log-out': '<path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>',
+  'chevron-right': '<path d="m9 18 6-6-6-6"/>',
+  'scale': '<path d="M12 3v18"/><path d="m19 8 3 8a5 5 0 0 1-6 0zV7"/><path d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1"/><path d="m5 8 3 8a5 5 0 0 1-6 0zV7"/><path d="M7 21h10"/>',
+  'route': '<path d="M9 5h8.5a1 1 0 010 7h-11a1 1 0 000 7H15"/><circle cx="18" cy="19" r="3"/><circle cx="6" cy="5" r="3"/>',
+  'triangle-alert': '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  'road': '<path d="M12 17v4"/><path d="M12 5V3"/><path d="M12 9v3"/><path d="M2.077 18.449A2 2 0 0 0 4 21h16a2 2 0 0 0 1.924-2.55l-4-14A2 2 0 0 0 16 3H8a2 2 0 0 0-1.924 1.45z"/>',
+  'wine': '<path d="M8 22h8"/><path d="M7 10h10"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/>',
+  'heart-pulse': '<path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/><path d="M3.22 13H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>',
+  'briefcase-medical': '<path d="M12 11v4"/><path d="M14 13h-4"/><path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M18 6v14"/><path d="M6 6v14"/><rect width="20" height="14" x="2" y="6" rx="2"/>',
+  'handshake': '<path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/>',
+  'shield-check': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  'wrench': '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/>',
+  'motorbike': '<path d="m18 14-1-3"/><path d="m3 9 6 2a2 2 0 0 1 2-2h2a2 2 0 0 1 1.99 1.81"/><path d="M8 17h3a1 1 0 0 0 1-1 6 6 0 0 1 6-6 1 1 0 0 0 1-1v-.75A5 5 0 0 0 17 5"/><circle cx="19" cy="17" r="3"/><circle cx="5" cy="17" r="3"/>'
 };
 const lucide = n => `<svg class="lucide lucide-${n}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LUCIDE[n]}</svg>`;
 /* ---- PAGES: one entry per section. To add a page: give it a key, a title, a Lucide icon
@@ -354,9 +385,12 @@ const PAGES = {
           <li>Sign options are reshuffled every time, so you learn the sign, not the letter.</li>
           <li>After submitting, every wrong answer comes back with the reason, and you can drill just those.</li>
         </ul>`}}},
-  study:   {title:'Study', icon:'book-open', view: v => viewStudy(v), meta: () => ({help:{title:'Studying the bank', body:`
+  study:   {title:'Study', icon:'book-open', view: v => viewStudy(v), meta: () => studyCatOpen()
+    ? {title: CATS[studyCat][0], menu:[
+        {label: showThai ? 'Hide Thai text' : 'Show Thai text', icon:'languages', run: () => { showThai = !showThai; render(); }}]}
+    : {help:{title:'Studying the bank', body:`
         <p>Every question in the bank, by category, with the right answer and the reason shown.</p>
-        <p>Read a category end to end when the History page shows it below 90%.</p>`}})},
+        <p>Pick a category to read it. Read a category end to end when the History page shows it below 90%.</p>`}}},
   signs:   {title:'Signs', icon:'signpost', view: v => viewSigns(v)},
   numbers: {title:'Key numbers', icon:'hash', view: v => viewNumbers(v)},
   process: {title:'The process', icon:'list-checks', view: v => viewProcess(v)},
@@ -371,7 +405,8 @@ const TABS = Object.entries(PAGES).map(([k, p]) => [k, p.title, p.icon]);
 const navState = () => history.state || {tab, d:0};
 function go(k){
   closePopover();
-  if (k === tab && !(k === 'mock' && exam && exam.submitted)) { scrollTo(0,0); return; }
+  const atRoot = !(k === 'study' && studyCatOpen());
+  if (k === tab && atRoot && !(k === 'mock' && exam && exam.submitted)) { scrollTo(0,0); return; }
   if (k === 'mock' && exam && exam.submitted) exam = null;   // a finished paper is not resumed
   const sub = k === 'mock' && exam && !exam.submitted ? 'exam' : undefined;   // a running paper keeps going
   history.pushState({tab:k, sub, d:navState().d + 1}, '', '#' + k);
@@ -468,13 +503,18 @@ helpDlg.addEventListener('click', e => { if (e.target === helpDlg) helpDlg.close
 /* ---- chrome: top bar + tab bar */
 const backBtn = document.getElementById('backBtn');
 backBtn.innerHTML = lucide('chevron-left');
-backBtn.onclick = () => history.back();
+/* a sub-page opened straight from a link has nothing behind it, so Back goes up to its parent instead */
+const canGoUp = () => studyCatOpen();
+backBtn.onclick = () => {
+  if (navState().d > 0) { history.back(); return; }
+  if (studyCatOpen()) { history.replaceState({tab:'study', d:0}, '', '#study'); render(); scrollTo(0,0); }
+};
 function renderChrome(){
   const page = PAGES[tab], meta = (page.meta && page.meta()) || {};
   const title = meta.title || page.title;
   document.getElementById('pageTitle').textContent = title;
   document.title = `${title} · Thai Motorcycle Licence`;
-  backBtn.hidden = !(navState().d > 0);
+  backBtn.hidden = !(navState().d > 0 || canGoUp());
   const slot = document.getElementById('tbAction');
   slot.innerHTML = '';
   if (meta.menu && meta.menu.length) {
@@ -744,26 +784,38 @@ function pagerHtml(key, total){
 }
 function wirePagers(v, key){
   v.querySelectorAll(`[data-pager="${key}"] button`).forEach(b => b.onclick = () => {
-    pageNo[key] = +b.dataset.p; history.replaceState(navState(), '', `#${key}/${pageNo[key]}`);
+    pageNo[key] = +b.dataset.p;
+    history.replaceState(navState(), '', key === 'study' ? `#study/${studyCat}/${pageNo[key]}` : `#${key}/${pageNo[key]}`);
     render(); scrollTo(0, 0);
   });
 }
 
 /* ---------- STUDY ---------- */
+/* The Study tab is a list of categories; each opens its own screen (history entry
+   {tab:'study', sub:'cat', cat}, hash #study/<cat>[/<page>]), so Back returns to the list. */
 let studyCat = 'veh';
+const studyCatOpen = () => { const s = navState(); return s.tab === 'study' && s.sub === 'cat' && !!CATS[s.cat]; };
+function openStudyCat(c){
+  history.pushState({tab:'study', sub:'cat', cat:c, d:navState().d + 1}, '', '#study/' + c);
+  studyCat = c; pageNo.study = 1; render(); scrollTo(0,0);
+}
 function viewStudy(v){
-  v.appendChild(el(`<div class="card">
-    <div class="row">${Object.keys(CATS).map(c =>
-      `<button class="btn ${c===studyCat?'':'ghost'}" data-c="${c}" style="padding:7px 12px;font-size:13.5px">
-        ${CATS[c][0]} <span style="opacity:.6">${BANK.filter(q=>q.c===c).length}</span></button>`).join('')}
-    </div>
-    <label class="row" style="gap:6px;margin-top:12px">
-      <input type="checkbox" id="th" ${showThai?'checked':''}> Show Thai alongside English</label>
-  </div>`));
-  v.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { studyCat = b.dataset.c; pageNo.study = 1; render(); });
-  v.querySelector('#th').onchange = e => { showThai = e.target.checked; render(); };
-  v.appendChild(el(`<h2>${CATS[studyCat][0]} · <span class="th">${CATS[studyCat][1]}</span></h2>`));
+  if (studyCatOpen()) { studyCat = navState().cat; return viewStudyCat(v); }
+  const list = el('<div class="card list"></div>');
+  Object.keys(CATS).forEach(c => {
+    const b = el(`<button>
+      <span class="ico">${lucide(CAT_ICON[c])}</span>
+      <span class="txt"><b>${CATS[c][0]}</b>${showThai ? `<span>${CATS[c][1]}</span>` : ''}</span>
+      <span class="count">${BANK.filter(q => q.c === c).length}</span>
+      ${lucide('chevron-right').replace('class="lucide', 'class="chev lucide')}</button>`);
+    b.onclick = () => openStudyCat(c);
+    list.appendChild(b);
+  });
+  v.appendChild(list);
+}
+function viewStudyCat(v){
   const all = BANK.filter(q => q.c === studyCat), pager = pagerHtml('study', all.length);
+  v.appendChild(el(`<p class="sub" style="margin:16px 0 0">${showThai ? CATS[studyCat][1] + ' · ' : ''}${all.length} questions</p>`));
   if (pager) v.appendChild(el(pager));
   pageSlice(all, pageNo.study, PAGE_SIZE.study).forEach(q => v.appendChild(qCard(q, null)));
   if (pager) v.appendChild(el(pagerHtml('study', all.length)));
@@ -1195,10 +1247,14 @@ function selftest(){
 }
 
 const fromHash = location.hash.slice(1).split('/')[0];
-const fromPage = +location.hash.split('/')[1] || 1;       // #signs/3 opens page 3
+const hashParts = location.hash.slice(1).split('/');
+const fromCat = fromHash === 'study' && CATS[hashParts[1]] ? hashParts[1] : null;   // #study/trf/2
+const fromPage = +hashParts[fromCat ? 2 : 1] || 1;       // #signs/3 opens page 3
 if (TABS.some(([k]) => k === fromHash)) tab = fromHash;
 if (pageNo[fromHash] !== undefined) pageNo[fromHash] = fromPage;
-history.replaceState({tab, d:0, sub: fromHash.startsWith('exam') ? 'exam' : undefined}, '', location.hash || '#' + tab);
+if (fromCat) studyCat = fromCat;
+history.replaceState({tab, d:0, sub: fromHash.startsWith('exam') ? 'exam' : fromCat ? 'cat' : undefined,
+  cat: fromCat || undefined}, '', location.hash || '#' + tab);
 if (location.search.includes('selftest')) selftest();
 /* #exam = straight into a fresh paper. #exam-sign, #exam-trf, … = one category
    under exam conditions; those are not written to history. */

@@ -25,7 +25,7 @@ Open `index.html` in any browser. No server, no internet, no build. Styled with 
 435 questions (231 written + 204 signs). Run `index.html?selftest` (or `node check.js`) to verify
 the bank, the artwork, the generated sign options, the gallery-only rule and the scoring.
 
-Handy URLs: `index.html#signs/7` and `index.html#study/2` open a tab at that page (the address
+Handy URLs: `index.html#signs/7` and `index.html#study/trf/2` open a tab (or a Study category) at that page (the address
 updates as you page, so a reload or a shared link lands in the same place); `index.html#exam` drops straight into a fresh paper; `index.html#exam-sign` (or
 `-mark`, `-alco`, `-fit`, `-aid`, `-trf`, `-veh`, `-etq`, `-safe`, `-maint`, `-moto`, `-proc`)
 drills one category under exam conditions without writing to your history.
