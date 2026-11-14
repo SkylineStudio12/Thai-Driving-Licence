@@ -6,7 +6,18 @@ const el = h => { const d = document.createElement('div'); d.innerHTML = h.trim(
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $ = (q, r = document) => r.querySelector(q);
 const THAI_LETTERS = ['ก','ข','ค','ง'];
-const initials = n => (n || '').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+const initials = n => (n || '').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+/* avatar content: initials, or a person glyph when no name is set */
+const avatarFace = () => initials(S.profile.name) ? esc(initials(S.profile.name)) : lucide('user', 'face');
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const smooth = () => reduceMotion() ? 'auto' : 'smooth';
+/* empty state: icon tile, title, one line of help and an optional action */
+function emptyState(icon, title, text, action, fn){
+  const e = el(`<div class="card empty"><span class="ei">${lucide(icon)}</span><b>${title}</b><p>${text}</p>
+    ${action ? `<button class="btn sm">${action} ${lucide('chevron-right')}</button>` : ''}</div>`);
+  if (action) e.querySelector('button').onclick = fn;
+  return e;
+}
 const chev = () => lucide('chevron-right', 'chev');
 const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
 const daysUntil = d => d ? Math.ceil((new Date(d + 'T00:00') - new Date(dayKey(Date.now()) + 'T00:00')) / 864e5) : null;
@@ -26,7 +37,7 @@ const nav = () => history.state || {tab, d:0};
 const hashOf = s => '#' + [s.tab, s.sub, s.key, s.i].filter(x => x !== undefined && x !== null).join('/');
 function go(k){
   closeSheet();
-  if (k === tab && !nav().sub) { scrollTo({top:0, behavior:'smooth'}); return; }
+  if (k === tab && !nav().sub) { scrollTo({top:0, behavior:smooth()}); return; }
   const s = {tab:k, d:nav().d + 1};
   history.pushState(s, '', hashOf(s)); tab = k; render(); scrollTo(0, 0);
 }
@@ -71,7 +82,7 @@ function chrome({title = '', sub = '', large = false, right = [], bare = false, 
     t.appendChild(b);
   });
 }
-const avatarBtn = () => { const b = el(`<button class="avatar" aria-label="Profile">${esc(initials(S.profile.name))}</button>`); b.onclick = openProfile; return b; };
+const avatarBtn = () => { const b = el(`<button class="avatar" aria-label="Profile and settings">${avatarFace()}</button>`); b.onclick = openProfile; return b; };
 const circleBtn = (icon, label, fn) => { const b = el(`<button class="circle" aria-label="${label}">${lucide(icon)}</button>`); b.onclick = fn; return b; };
 
 let tick = null;
@@ -138,7 +149,7 @@ function refreshSheet(){
   const link = (icon, label, href) => el(`<a class="item" href="${href}"><span class="ico">${lucide(icon)}</span>
       <span class="txt"><b>${label}</b></span><span class="end">${lucide('external-link', 'chev')}</span></a>`);
   sh.innerHTML = `<button class="circle close" aria-label="Close">${lucide('x')}</button>
-    <div class="profile-head"><span class="big-avatar">${esc(initials(S.profile.name))}</span>
+    <div class="profile-head"><span class="big-avatar" aria-hidden="true">${avatarFace()}</span>
       <h2>${esc(S.profile.name || 'Rider')}</h2>
       <span>${left === null ? 'No exam date set' : left > 0 ? `Exam in ${left} day${left > 1 ? 's' : ''}` : left === 0 ? 'Exam today' : 'Exam date passed'}</span></div>
     <div class="label">Personalize</div><div class="list boxed" id="g1"></div>
@@ -304,14 +315,14 @@ function viewTestOptions(v, c){
   S.lastCat = c; persist();
 }
 function viewRules(v){
-  chrome({title:'Sign shapes and colours'});
-  v.appendChild(el(`<div class="card hero"><div class="grow"><h2>All ${SIGNS.length} signs</h2>
+  chrome({title:'Sign shapes & colours'});
+  v.appendChild(el(`<div class="card hero rules-hero"><div class="grow"><h2>All ${SIGNS.length} signs</h2>
     <p style="margin:0">As the real DLT artwork: <b>บ-</b> regulatory, <b>ต-</b> warning, <b>ตก-</b> roadworks pictograms, <b>ตค-</b> roadworks text, <b>น-</b> guide. Signs are the cheapest marks on the paper: they are pictures, so the language barrier does not apply.</p></div></div>`));
   v.appendChild(el('<div class="h2">Learn the logic first</div>'));
   SIGN_RULES.forEach(r => v.appendChild(el(`<div class="card rule"><div class="imgs ${r.imgs.length > 2 ? 'three' : ''}">${r.imgs.map(i => `<img src="../signs/${i}.png" alt="">`).join('')}</div>
     <div style="flex:1;min-width:0"><div class="top"><h3>${r.title}</h3><span class="pill">${r.badge}</span></div>
     <p>${S.showThai && r.th ? r.th + '. ' : ''}${r.text}</p></div></div>`)));
-  const b = el(`<div style="margin-top:16px"><button class="btn">Practise road signs</button></div>`);
+  const b = el(`<div class="rules-cta"><button class="btn">Practise road signs ${lucide('chevron-right')}</button></div>`);
   b.firstChild.onclick = () => open('cat', 'sign');
   v.appendChild(b);
 }
@@ -337,13 +348,13 @@ function qCard(q, picked, opts = {}){
 }
 let deck = null;
 function viewBook(v, c){
-  chrome({title:`${CATS[c][0]} · book`});
+  chrome({title:CATS[c][0], sub:'Theory book', tabs:false});
   const all = pool(S).filter(q => q.c === c), n = all.length;
   let i = Math.min(Math.max(0, (+nav().i || 1) - 1), n - 1);
-  const wrap = el(`<div><div class="deck-nav"><span class="muted small">Swipe for the next question</span>
-      <span class="row" style="gap:6px"><button class="circle" id="dp" aria-label="Previous">${lucide('chevron-left')}</button>
-      <span class="pos"></span><button class="circle" id="dn" aria-label="Next">${lucide('chevron-right')}</button></span></div>
-    <div class="progress" style="margin-top:10px"><i></i></div>
+  const wrap = el(`<div class="book"><div class="deck-nav"><div class="pos-wrap"><b class="pos" aria-live="polite"></b><span>Swipe or use the arrows</span></div>
+      <span class="deck-btns"><button class="circle" id="dp" aria-label="Previous question">${lucide('chevron-left')}</button>
+      <button class="circle" id="dn" aria-label="Next question">${lucide('chevron-right')}</button></span></div>
+    <div class="progress thin deck-prog"><i></i></div>
     <div class="deck"><div class="deck-track" tabindex="0" aria-roledescription="carousel"></div></div></div>`);
   v.appendChild(wrap);
   const box = $('.deck', wrap), track = $('.deck-track', wrap);
@@ -351,14 +362,14 @@ function viewBook(v, c){
   const slides = [...track.children];
   const sync = () => {
     const h = slides[i].offsetHeight; if (h) box.style.height = h + 'px';
-    $('.pos', wrap).textContent = `${i+1} / ${n}`;
+    $('.pos', wrap).textContent = `Question ${i+1} of ${n}`;
     $('.progress i', wrap).style.width = pct(i + 1, n) + '%';
     $('#dp', wrap).disabled = i === 0; $('#dn', wrap).disabled = i === n - 1;
     slides.forEach((s, k) => s.setAttribute('aria-hidden', k !== i));
     markSeen(S, all[i].id); persist();
     history.replaceState({...nav(), i:i + 1}, '', `#theory/book/${c}/${i + 1}`);
   };
-  const goTo = (k, smooth) => { i = Math.min(Math.max(0, k), n - 1); track.scrollTo({left:i * track.clientWidth, behavior:smooth ? 'smooth' : 'auto'}); sync(); };
+  const goTo = (k, smooth) => { i = Math.min(Math.max(0, k), n - 1); track.scrollTo({left:i * track.clientWidth, behavior:smooth && !reduceMotion() ? 'smooth' : 'auto'}); sync(); };
   let raf = 0;
   track.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => {
     const k = Math.round(track.scrollLeft / track.clientWidth); if (k !== i && k >= 0 && k < n) { i = k; sync(); } }); }, {passive:true});
@@ -394,21 +405,23 @@ function viewPractice(v){
 }
 function viewList(v, kind){
   const ids = kind === 'mistakes' ? mistakes(S) : S.bookmarks.filter(id => BY_ID[id]);
-  chrome({title: kind === 'mistakes' ? 'Mistakes' : 'Bookmarks'});
+  const mk = kind === 'mistakes';
+  chrome({title: mk ? 'Mistakes' : 'Bookmarks'});
   if (!ids.length) {
-    v.appendChild(el(`<div class="card empty">${art('', kind === 'mistakes' ? 'pencil' : 'bookmark', '')}<p>${kind === 'mistakes'
-      ? 'No mistakes yet. Every question you answer wrongly will wait here until you get it right.'
-      : 'No bookmarks yet. Tap the bookmark button on any question during a test to save it here.'}</p></div>`));
+    v.appendChild(mk
+      ? emptyState('circle-check', 'No mistakes yet', 'Every question you answer wrongly waits here until you get it right.', 'Take a quick quiz', () => startQuiz({kind:'random', n:10}))
+      : emptyState('bookmark', 'No bookmarks yet', 'Tap the bookmark button on any question during a test to save it here.', 'Start practising', () => startQuiz({kind:'random', n:20})));
     return;
   }
-  const b = el(`<div><button class="btn">Practise these ${ids.length}</button></div>`);
-  b.firstChild.onclick = () => startQuiz({kind, ids});
-  v.appendChild(b);
-  const g = el('<div class="list boxed" style="margin-top:14px"></div>');
+  v.appendChild(el(`<p class="muted list-lead">${mk ? `${ids.length} question${ids.length > 1 ? 's' : ''} you answered wrongly last time. Get one right and it leaves this list.`
+                                                   : `${ids.length} saved question${ids.length > 1 ? 's' : ''}.`}</p>`));
+  const g = el('<div class="list boxed qlist"></div>');
   ids.forEach(id => { const q = BY_ID[id];
-    g.appendChild(el(`<div class="item" style="cursor:default"><span class="ico">${q.img ? `<img src="../${q.img}" alt="" style="width:34px;height:34px;object-fit:contain;background:#fff;border-radius:8px">` : lucide(CAT_ICON[q.c])}</span>
-      <span class="txt"><b style="font-size:14.5px;font-weight:500;white-space:normal">${esc(q.sign ? q.sign.en : q.en)}</b><span>${CATS[q.c][0]}</span></span></div>`)); });
-  v.appendChild(g);
+    g.appendChild(el(`<div class="item"><span class="ico ${q.img ? 'pic' : ''}">${q.img ? `<img src="../${q.img}" alt="">` : lucide(CAT_ICON[q.c])}</span>
+      <span class="txt"><b>${esc(q.sign ? q.sign.en : q.en)}</b><span>${CATS[q.c][0]}</span></span></div>`)); });
+  const b = el(`<button class="btn list-cta">Practise these ${ids.length} ${lucide('play', 'fill')}</button>`);
+  b.onclick = () => startQuiz({kind, ids});
+  v.append(b, g);
 }
 
 /* ================= quiz runner (practice tests and the mock exam) ================= */
@@ -560,11 +573,19 @@ function smoothPath(pts, lo = -Infinity, hi = Infinity){
   }
   return d;
 }
-function chartSvg(points, passMark){
-  const W = 320, H = 196, L = 34, R = 10, T = 10, B = 8, y = v => T + (100 - v) / 100 * (H - T - B);
+/* W follows the card width so the axis text stays the same size on wide screens */
+function chartSvg(points, passMark, W = 320){
+  const H = 196, L = 34, R = 10, T = 10, B = 8, y = v => T + (100 - v) / 100 * (H - T - B);
   const xs = points.length > 1 ? points.map((_, k) => L + 6 + k * (W - L - R - 12) / (points.length - 1)) : [L + (W - L - R) / 2];
   const pts = points.map((p, k) => [xs[k], y(p)]);
   const line = smoothPath(pts, y(100), y(0));
+  if (pts.length === 1) { const [cx, cy] = pts[0], v = points[0];
+    return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="One test this month: ${v}%, pass mark ${passMark}%">
+      ${[0, 20, 40, 60, 80, 100].map(g => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(g)}" y2="${y(g)}"/><text x="${L - 10}" y="${y(g) + 4}" text-anchor="end">${g}</text>`).join('')}
+      <line class="pass" x1="${L}" x2="${W - R}" y1="${y(passMark)}" y2="${y(passMark)}"/><text class="pass-l" x="${W - R}" y="${y(passMark) - 5}" text-anchor="end">pass ${passMark}</text>
+      <line class="line" x1="${cx - 36}" x2="${cx + 36}" y1="${cy}" y2="${cy}"/>
+      <circle class="dot big" cx="${cx}" cy="${cy}" r="5"/>
+      <text class="val" x="${cx}" y="${cy - 12}" text-anchor="middle">${v}%</text></svg>`; }
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Scores over time, pass mark ${passMark}%">
     <defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" class="f0"/><stop offset="1" class="f1"/></linearGradient></defs>
     ${[0, 20, 40, 60, 80, 100].map(g => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(g)}" y2="${y(g)}"/><text x="${L - 10}" y="${y(g) + 4}" text-anchor="end">${g}</text>`).join('')}
@@ -586,7 +607,9 @@ function viewProgress(v){
       : a.mode === 'practice' && a.kind !== 'cat' && (progFilter === 'all' || a.kind === progFilter));
   const now = new Date(), cur = progMonth || new Date(now.getFullYear(), now.getMonth(), 1);
   const inMonth = att.filter(a => { const d = new Date(a.when); return d.getFullYear() === cur.getFullYear() && d.getMonth() === cur.getMonth(); });
-  const mName = d => d.toLocaleDateString('en-GB', {month:'short', year:'numeric'});
+  /* short month; the year only when it is not the current one */
+  const mName = d => d.toLocaleDateString('en-GB', d.getFullYear() === now.getFullYear() ? {month:'short'} : {month:'short', year:'numeric'});
+  const mLong = d => d.toLocaleDateString('en-GB', {month:'long', year:'numeric'});
   const prevM = new Date(cur.getFullYear(), cur.getMonth() - 1, 1), nextM = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
   const head = el(`<div class="row between" style="margin:18px 2px 8px"><b style="font-size:18px">${{theory:'Theory', practice:'Practice', exam:'Exam'}[progTab]} progress</b>
     <select class="sel" aria-label="Filter">${opts.map(([k, l]) => `<option value="${k}" ${k === progFilter ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`);
@@ -595,13 +618,13 @@ function viewProgress(v){
   const passMark = progTab === 'exam' ? 90 : PRACTICE_PASS * 100;
   const card = el(`<div class="card chart-card"><div class="chart-top"><span>Tests taken: <b>${inMonth.length}</b></span>
     ${inMonth.length ? `<span class="chip-stat">Passed: <b>${pct(inMonth.filter(passed).length, inMonth.length)}%</b></span>` : ''}</div>
-    ${inMonth.length ? chartSvg(inMonth.map(a => pct(a.score, a.of)), passMark)
+    ${inMonth.length ? chartSvg(inMonth.map(a => pct(a.score, a.of)), passMark, Math.max(260, Math.min(608, v.clientWidth - 64)))
                      : `<div class="chart-empty"><span class="ei">${lucide('chart-spline')}</span>
-                        <b>No ${progTab === 'exam' ? 'mock papers' : 'tests'} in ${mName(cur)}</b>
+                        <b>No ${progTab === 'exam' ? 'mock papers' : 'tests'} in ${mLong(cur).replace(' ' + now.getFullYear(), '')}</b>
                         <p>Take a test and your scores will chart here.</p>
                         <button class="btn sm" id="go">Start a test ${lucide('chevron-right')}</button></div>`}
-    <div class="months"><button id="pm" aria-label="Previous month, ${mName(prevM)}">${lucide('chevron-left')} ${mName(prevM)}</button><b>${mName(cur)}</b>
-      <button id="nm" aria-label="Next month, ${mName(nextM)}" ${nextM > now ? 'disabled' : ''}>${mName(nextM)} ${lucide('chevron-right')}</button></div></div>`);
+    <div class="months"><button id="pm" aria-label="Previous month, ${mLong(prevM)}">${lucide('chevron-left')} ${mName(prevM)}</button><b aria-live="polite">${mName(cur)}</b>
+      <button id="nm" aria-label="Next month, ${mLong(nextM)}" ${nextM > now ? 'disabled' : ''}>${mName(nextM)} ${lucide('chevron-right')}</button></div></div>`);
   card.querySelector('#pm').onclick = () => { progMonth = prevM; render(); };
   card.querySelector('#nm').onclick = () => { progMonth = nextM; render(); };
   const goBtn = card.querySelector('#go');
@@ -619,9 +642,9 @@ function viewProgress(v){
     const recent = att.slice(-8).reverse();
     v.appendChild(el('<div class="h2">Recent</div>'));
     v.appendChild(recent.length ? (() => { const g = el('<div class="list boxed"></div>');
-      recent.forEach(a => g.appendChild(el(`<div class="item" style="cursor:default"><span class="ico" style="box-shadow:none;background:none">${lucide(passed(a) ? 'circle-check' : 'circle-x', passed(a) ? 'ok' : 'bad')}</span>
+      recent.forEach(a => g.appendChild(el(`<div class="item"><span class="ico plain">${lucide(passed(a) ? 'circle-check' : 'circle-x', passed(a) ? 'ok' : 'bad')}</span>
         <span class="txt"><b>${a.score}/${a.of} · ${pct(a.score, a.of)}%</b><span>${new Date(a.when).toLocaleString('en-GB', {dateStyle:'medium', timeStyle:'short'})}${a.imported ? ' · from the classic app' : ''}</span></span></div>`)));
-      return g; })() : el(`<div class="card empty">${art('', 'history')}<p>Your finished ${progTab === 'exam' ? 'mock papers' : 'tests'} will be listed here.</p></div>`));
+      return g; })() : emptyState('history', 'Nothing here yet', `Your finished ${progTab === 'exam' ? 'mock papers' : 'tests'} will be listed here.`));
   }
 }
 
