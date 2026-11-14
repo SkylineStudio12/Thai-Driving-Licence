@@ -166,9 +166,12 @@ Three things to know about that material:
 
 Every screen shares one skeleton: a top bar (Back on the left, the title in the middle, an
 optional kebab menu or help button on the right), the content area, and the section tab bar
-at the bottom. Sections that do not fit the tab bar go under its last item, **More**.
+at the bottom: a floating bar with a round **Start exam** button in the middle. Sections that do
+not fit go under its last item, **More**; `NAV_ORDER` sets which ones stay in the bar first. While a
+paper is running the tab bar and Back are hidden, and the only way out is **Cancel exam** in the
+top-right menu, which lands on History.
 
-To add a section, add an entry to `PAGES` in `index.html`:
+To add a section, add an entry to `PAGES` in `index.html` and its key to `NAV_ORDER`:
 
 ```js
 myPage: {title:'My page', icon:'lucide-icon-name', view: v => viewMyPage(v),
