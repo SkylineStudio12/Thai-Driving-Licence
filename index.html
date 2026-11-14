@@ -70,6 +70,17 @@ body{margin:0;background:var(--background);color:var(--foreground);
 .icon-btn:hover,.icon-btn[aria-expanded=true]{background:var(--accent-bg)}
 .icon-btn svg{width:20px;height:20px}
 .icon-btn[hidden]{display:none}
+/* top-level pages (every tab-bar destination): no bar, no Back, a large left-aligned title that
+   scrolls with the page; the optional action floats top-right as a round button */
+.topbar.large{position:static;border-bottom:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.topbar.large .topbar-row{grid-template-columns:1fr auto;min-height:0;gap:0;padding-top:12px}
+.topbar.large .tb-slot:first-child{display:none}
+.topbar.large .tb-slot.end{grid-column:2;grid-row:1;min-height:8px}
+.topbar.large h1{grid-column:1 / -1;grid-row:2;text-align:left;font-size:32px;font-weight:700;
+  letter-spacing:-.03em;line-height:1.15;margin:4px 0 0;white-space:normal}
+.topbar.large .icon-btn{width:42px;height:42px;border-radius:999px;background:var(--muted)}
+.topbar.large .icon-btn:hover{background:color-mix(in srgb,var(--muted) 80%,var(--foreground) 8%)}
+
 /* floating pill tab bar with a round Start-exam button in the middle */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;pointer-events:none;
   padding:0 12px calc(10px + env(safe-area-inset-bottom))}
@@ -167,8 +178,9 @@ label.row input{margin-top:4px}
   border-radius:var(--radius);padding:10px;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .list button+button{position:relative}
 .list button+button::before{content:"";position:absolute;top:0;left:56px;right:10px;border-top:1px solid var(--border)}
-.list button:hover{background:var(--accent-bg)}
-.list button:hover::before,.list button:hover+button::before{border-color:transparent}
+@media (hover:hover){.list button:hover{background:var(--accent-bg)}
+.list button:hover::before,.list button:hover+button::before{border-color:transparent}}
+.list button:active{background:var(--accent-bg)}
 .list .ico{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:36px;height:36px;
   border-radius:calc(var(--radius) - 2px);background:var(--muted);color:var(--foreground)}
 .list .ico svg{width:18px;height:18px}
@@ -207,6 +219,19 @@ label.row input{margin-top:4px}
   border-radius:999px;background:var(--secondary);color:var(--secondary-foreground);white-space:nowrap}
 .callout{display:flex;gap:10px;align-items:flex-start;margin:18px 4px;font-size:14px;color:var(--muted-foreground)}
 .callout svg{flex:0 0 auto;width:18px;height:18px;margin-top:2px}
+
+/* Study deck: one question card per slide, swiped with native scroll-snap */
+.deck{margin:12px -16px 0;overflow:hidden;transition:height .25s ease}
+.deck-track{display:flex;align-items:flex-start;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.deck-track::-webkit-scrollbar{display:none}
+.slide{flex:0 0 100%;min-width:0;padding:0 16px;scroll-snap-align:center;scroll-snap-stop:always}
+.slide .card{margin:0}
+.deck-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0 0}
+.deck-nav .icon-btn:disabled{opacity:.35;cursor:default}
+.deck-nav .pos{min-width:64px;text-align:center;font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--muted-foreground)}
+.deck-hint{text-align:center;font-size:12.5px;color:var(--muted-foreground);margin:10px 0 0}
+@media (prefers-reduced-motion:reduce){.deck{transition:none}.deck-track{scroll-behavior:auto}}
 
 /* Alert */
 .why{background:var(--warning-bg);border:1px solid color-mix(in srgb,var(--warning) 35%,transparent);
@@ -439,7 +464,8 @@ const PAGES = {
   signs:   {title:'Signs', icon:'signpost', view: v => viewSigns(v), meta: () => {
     const s = navState();
     if (signsSub() === 'rules') return {title:'General rules'};
-    if (signsSub() === 'fam') return {title: FAM_TITLE[s.fam][0]};
+    if (signsSub() === 'group') return {title: SIGN_GROUPS.find(g => g.key === s.group).title};
+    if (signsSub() === 'fam') return {title: famName(s.fam)};
     return {};
   }},
   numbers: {title:'Key numbers', icon:'hash', view: v => viewNumbers(v)},
@@ -561,7 +587,11 @@ backBtn.innerHTML = lucide('chevron-left');
 const canGoUp = () => !!navState().sub && tab !== 'mock';
 backBtn.onclick = () => {
   if (navState().d > 0) { history.back(); return; }
-  if (canGoUp()) { history.replaceState({tab, d:0}, '', '#' + tab); render(); scrollTo(0,0); }
+  if (!canGoUp()) return;
+  const s = navState(), g = s.sub === 'fam' && famGroup(s.fam);
+  if (g && g.fams.length > 1) history.replaceState({tab:'signs', sub:'group', group:g.key, d:0}, '', '#signs/' + g.key);
+  else history.replaceState({tab, d:0}, '', '#' + tab);
+  render(); scrollTo(0,0);
 };
 function renderChrome(){
   const page = PAGES[tab], meta = (page.meta && page.meta()) || {};
@@ -569,8 +599,10 @@ function renderChrome(){
   document.getElementById('pageTitle').textContent = title;
   document.title = `${title} · Thai Motorcycle Licence`;
   const running = tab === 'mock' && exam && !exam.submitted;
+  const isRoot = !navState().sub && !(tab === 'mock' && exam);   // a tab-bar destination itself
   document.body.classList.toggle('exam-mode', !!running);
-  backBtn.hidden = running || !(navState().d > 0 || canGoUp());
+  document.querySelector('.topbar').classList.toggle('large', isRoot);
+  backBtn.hidden = isRoot || running || !(navState().d > 0 || canGoUp());
   const slot = document.getElementById('tbAction');
   slot.innerHTML = '';
   if (meta.menu && meta.menu.length) {
@@ -879,14 +911,73 @@ function viewStudy(v){
   });
   v.appendChild(list);
 }
+/* One question at a time: swipe (or use the arrows / keyboard) to move between cards.
+   pageNo.study is the 1-based card number, kept in the hash as #study/<cat>/<n>. */
+let deck = null;
 function viewStudyCat(v){
-  const all = BANK.filter(q => q.c === studyCat), pager = pagerHtml('study', all.length);
-  v.appendChild(el(`<p class="sub" style="margin:16px 0 0">${showThai ? CATS[studyCat][1] + ' · ' : ''}${all.length} questions</p>`));
-  if (pager) v.appendChild(el(pager));
-  pageSlice(all, pageNo.study, PAGE_SIZE.study).forEach(q => v.appendChild(qCard(q, null)));
-  if (pager) v.appendChild(el(pagerHtml('study', all.length)));
-  wirePagers(v, 'study');
+  const all = BANK.filter(q => q.c === studyCat), n = all.length;
+  let i = Math.min(Math.max(1, pageNo.study), n) - 1;
+  const wrap = el(`<div>
+    <div class="deck-nav">
+      <span class="sub" style="margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${showThai ? CATS[studyCat][1] + ' · ' : ''}${n} questions</span>
+      <span class="row" style="flex-wrap:nowrap;gap:4px">
+        <button class="icon-btn" id="dPrev" aria-label="Previous question">${lucide('chevron-left')}</button>
+        <span class="pos" aria-live="polite"></span>
+        <button class="icon-btn" id="dNext" aria-label="Next question">${lucide('chevron-right')}</button>
+      </span>
+    </div>
+    <div class="bar" style="margin:6px 0 0"><i></i></div>
+    <div class="deck"><div class="deck-track" tabindex="0" aria-roledescription="carousel" aria-label="${CATS[studyCat][0]} questions"></div></div>
+    <p class="deck-hint">Swipe left or right to move between questions</p></div>`);
+  v.appendChild(wrap);
+  const box = wrap.querySelector('.deck'), track = wrap.querySelector('.deck-track');
+  all.forEach((q, k) => {
+    const sl = el(`<div class="slide" role="group" aria-roledescription="slide" aria-label="${k+1} of ${n}"></div>`);
+    sl.appendChild(qCard(q, null));
+    track.appendChild(sl);
+  });
+  const slides = [...track.children];
+  const sync = () => {
+    const h = slides[i].offsetHeight;
+    if (h) box.style.height = h + 'px';
+    wrap.querySelector('.pos').textContent = `${i+1} / ${n}`;
+    wrap.querySelector('.bar i').style.width = ((i+1) / n * 100).toFixed(1) + '%';
+    wrap.querySelector('#dPrev').disabled = i === 0;
+    wrap.querySelector('#dNext').disabled = i === n - 1;
+    slides.forEach((sl, k) => sl.setAttribute('aria-hidden', k !== i));
+    pageNo.study = i + 1;
+    history.replaceState(navState(), '', `#study/${studyCat}/${i+1}`);
+  };
+  const goTo = (k, smooth) => {
+    i = Math.min(Math.max(0, k), n - 1);
+    track.scrollTo({left: i * track.clientWidth, behavior: smooth ? 'smooth' : 'auto'});
+    sync();
+  };
+  let raf = 0;
+  track.addEventListener('scroll', () => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const k = Math.round(track.scrollLeft / track.clientWidth);
+      if (k !== i && k >= 0 && k < n) { i = k; sync(); }
+    });
+  }, {passive: true});
+  wrap.querySelector('#dPrev').onclick = () => goTo(i - 1, true);
+  wrap.querySelector('#dNext').onclick = () => goTo(i + 1, true);
+  let lastW = 0;
+  deck = {prev: () => goTo(i - 1, true), next: () => goTo(i + 1, true),
+          /* phones fire resize as the URL bar shows/hides; only a width change needs re-aligning */
+          realign: () => { if (track.clientWidth !== lastW) { lastW = track.clientWidth; goTo(i, false); } }};
+  /* images change a card's height once they load */
+  track.querySelectorAll('img').forEach(im => im.addEventListener('load', () => sync(), {once: true}));
+  requestAnimationFrame(() => goTo(i, false));
 }
+addEventListener('keydown', e => {
+  if (!studyCatOpen() || !deck || popAnchor || document.querySelector('dialog[open]')) return;
+  if (e.target.closest && e.target.closest('input,textarea,select')) return;
+  if (e.key === 'ArrowLeft') { e.preventDefault(); deck.prev(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); deck.next(); }
+});
+addEventListener('resize', () => { if (studyCatOpen() && deck) deck.realign(); });
 
 /* ---------- SIGNS gallery ---------- */
 const FAM_TITLE = {
@@ -918,29 +1009,60 @@ const FAM_TITLE = {
 /* Signs tab: a "General rules" entry, then the sign families as a list; each opens its own
    screen ({tab:'signs', sub:'rules'} or {tab:'signs', sub:'fam', fam}; hash #signs/rules, #signs/<fam>). */
 const signsSub = () => { const s = navState();
-  return s.tab !== 'signs' ? null : s.sub === 'rules' ? 'rules' : s.sub === 'fam' && FAM_TITLE[s.fam] ? 'fam' : null; };
-function openSigns(sub, fam){
-  history.pushState({tab:'signs', sub, fam, d:navState().d + 1}, '', '#signs/' + (fam || sub));
+  return s.tab !== 'signs' ? null : s.sub === 'rules' ? 'rules' : s.sub === 'fam' && FAM_TITLE[s.fam] ? 'fam'
+    : s.sub === 'group' && SIGN_GROUPS.some(g => g.key === s.group) ? 'group' : null; };
+/* the 24 families, grouped by the kind of sign; a group with one family opens that family directly */
+const SIGN_GROUPS = [
+  {key:'regulatory', title:'Regulatory', th:'ป้ายบังคับ', img:'bo-01', desc:'Must and must-not: right of way, bans, limits, commands',
+   fams:['priority','prohibit','noturn','novehicle','speed','limit','direction','lane','endzone']},
+  {key:'warning', title:'Warning', th:'ป้ายเตือน', img:'to-11', desc:'Yellow diamonds and markers: what is coming up',
+   fams:['curve','junction','narrow','rail','gradient','surface','laneflow','uturn','aheadwarn','people','marker']},
+  {key:'roadworks', title:'Roadworks', th:'ป้ายในงานก่อสร้าง', img:'tg-03', desc:'Orange, temporary: pictograms, diversions, text signs',
+   fams:['workwarn','divert','work']},
+  {key:'guide', title:'Guide & information', th:'ป้ายแนะนำ', img:null, desc:'Directions, places and services',
+   fams:['guide']}
+];
+const famGroup = f => SIGN_GROUPS.find(g => g.fams.includes(f));
+/* inside a group the "Warning: " / "Roadworks: " prefix is already said by the group */
+const famName = f => { const n = FAM_TITLE[f][0].replace(/^(Warning|Roadworks): /, ''); return n[0].toUpperCase() + n.slice(1); };
+const famSigns = f => SIGNS.filter(s => s.fam === f);
+function openSigns(sub, fam, group){
+  history.pushState({tab:'signs', sub, fam, group, d:navState().d + 1}, '', '#signs/' + (fam || group || sub));
   render(); scrollTo(0,0);
 }
 const chev = () => lucide('chevron-right').replace('class="lucide', 'class="chev lucide');
 function viewSigns(v){
   if (signsSub() === 'rules') return viewSignRules(v);
   if (signsSub() === 'fam') return viewSignFamily(v, navState().fam);
+  if (signsSub() === 'group') return viewSignGroup(v, navState().group);
   const top = el('<div class="card list"></div>');
   const r = el(`<button><span class="ico">${lucide('layers')}</span>
     <span class="txt"><b>General rules</b><span>Shape and colour logic · start here</span></span>${chev()}</button>`);
   r.onclick = () => openSigns('rules');
   top.appendChild(r);
   v.appendChild(top);
-  v.appendChild(el(`<div class="section-head"><h2>Sign families</h2>
-    <p>Grouped by the families the exam confuses on purpose. ${SIGNS.length} signs in all.</p></div>`));
+  v.appendChild(el(`<div class="section-head"><h2>Sign groups</h2>
+    <p>${SIGNS.length} signs, as the real DLT artwork.</p></div>`));
   const list = el('<div class="card list"></div>');
-  Object.keys(FAM_TITLE).forEach(f => {
-    const inFam = SIGNS.filter(s => s.fam === f);
-    if (!inFam.length) return;
+  SIGN_GROUPS.forEach(g => {
+    const n = g.fams.reduce((a, f) => a + famSigns(f).length, 0);
+    const img = g.img ? `signs/${g.img}.png` : famSigns(g.fams[0])[0].img;
+    const b = el(`<button><img class="thumb" src="${img}" alt="" loading="lazy">
+      <span class="txt"><b>${g.title}</b><span>${showThai ? g.th : g.desc}</span></span>
+      <span class="count">${n}</span>${chev()}</button>`);
+    b.onclick = () => g.fams.length === 1 ? openSigns('fam', g.fams[0]) : openSigns('group', null, g.key);
+    list.appendChild(b);
+  });
+  v.appendChild(list);
+}
+function viewSignGroup(v, key){
+  const g = SIGN_GROUPS.find(x => x.key === key);
+  v.appendChild(el(`<p class="sub" style="margin:16px 0 0">${showThai ? g.th + ' · ' : ''}${g.desc}</p>`));
+  const list = el('<div class="card list"></div>');
+  g.fams.forEach(f => {
+    const inFam = famSigns(f);
     const b = el(`<button><img class="thumb" src="${inFam[0].img}" alt="" loading="lazy">
-      <span class="txt"><b>${FAM_TITLE[f][0]}</b>${showThai ? `<span>${FAM_TITLE[f][1]}</span>` : ''}</span>
+      <span class="txt"><b>${famName(f)}</b>${showThai ? `<span>${FAM_TITLE[f][1]}</span>` : ''}</span>
       <span class="count">${inFam.length}</span>${chev()}</button>`);
     b.onclick = () => openSigns('fam', f);
     list.appendChild(b);
@@ -972,13 +1094,13 @@ function viewSignRules(v){
     <div class="art${r.imgs.length > 2 ? ' three' : ''}">${r.imgs.map(i => `<img src="signs/${i}.png" alt="">`).join('')}</div>
     <div class="txt"><div class="top"><h3>${r.title}</h3><span class="badge">${r.badge}</span></div>
       <p>${showThai && r.th ? `<span class="th">${r.th}.</span> ` : ''}${r.text}</p></div></div>`)));
-  const go2 = el(`<p class="callout">${lucide('info')}<span>The sign families on the Signs page are grouped
-    the way the exam confuses them on purpose. Each group is worth reading side by side.</span></p>`);
+  const go2 = el(`<p class="callout">${lucide('info')}<span>Within each group on the Signs page, signs are sorted
+    into the families the exam confuses on purpose. Each family is worth reading side by side.</span></p>`);
   v.appendChild(go2);
 }
 function viewSignFamily(v, f){
   const inFam = SIGNS.filter(s => s.fam === f);
-  v.appendChild(el(`<p class="sub" style="margin:16px 0 0">${showThai ? FAM_TITLE[f][1] + ' · ' : ''}${inFam.length} signs</p>`));
+  v.appendChild(el(`<p class="sub" style="margin:16px 0 0">${famGroup(f).title} · ${showThai ? FAM_TITLE[f][1] + ' · ' : ''}${inFam.length} signs</p>`));
   inFam.forEach(s => v.appendChild(el(
       `<div class="card"><div class="row" style="gap:16px;align-items:flex-start;flex-wrap:nowrap">
         ${signImg(s,96)}
@@ -1346,13 +1468,15 @@ function selftest(){
 const fromHash = location.hash.slice(1).split('/')[0];
 const hashParts = location.hash.slice(1).split('/');
 const fromCat = fromHash === 'study' && CATS[hashParts[1]] ? hashParts[1] : null;   // #study/trf/2
-const fromSigns = fromHash === 'signs' ? (hashParts[1] === 'rules' ? 'rules' : FAM_TITLE[hashParts[1]] ? 'fam' : null) : null;
+const fromSigns = fromHash === 'signs' ? (hashParts[1] === 'rules' ? 'rules' : FAM_TITLE[hashParts[1]] ? 'fam'
+  : SIGN_GROUPS.some(g => g.key === hashParts[1]) ? 'group' : null) : null;
 const fromPage = +hashParts[fromCat ? 2 : 1] || 1;       // #study/trf/2 opens page 2
 if (TABS.some(([k]) => k === fromHash)) tab = fromHash;
 if (pageNo[fromHash] !== undefined) pageNo[fromHash] = fromPage;
 if (fromCat) studyCat = fromCat;
 history.replaceState({tab, d:0, sub: fromHash.startsWith('exam') ? 'exam' : fromCat ? 'cat' : fromSigns || undefined,
-  cat: fromCat || undefined, fam: fromSigns === 'fam' ? hashParts[1] : undefined}, '', location.hash || '#' + tab);
+  cat: fromCat || undefined, fam: fromSigns === 'fam' ? hashParts[1] : undefined,
+  group: fromSigns === 'group' ? hashParts[1] : undefined}, '', location.hash || '#' + tab);
 if (location.search.includes('selftest')) selftest();
 /* #exam = straight into a fresh paper. #exam-sign, #exam-trf, … = one category
    under exam conditions; those are not written to history. */

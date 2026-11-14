@@ -7,7 +7,7 @@ Open `index.html` in any browser. No server, no internet, no build. Styled with 
 
 - **Mock exam** — 50 questions, 60-minute timer, no feedback until you submit, 45/50 to pass.
   Every wrong answer comes back with an explanation, and you can re-drill just those.
-- **Study** — the whole bank by category, answers and reasons shown, six questions to a page with numbered navigation.
+- **Study** — the whole bank by category, answers and reasons shown, one question card at a time: swipe left or right (or use the arrows / arrow keys) to move between them.
 - **Alcohol & drugs · Fitness to ride · First aid** — three new categories covering the topics you
   remembered from the real exam: the alcohol limits, whether a given medical condition disqualifies
   you, and which casualty carry suits which injury.
@@ -25,7 +25,7 @@ Open `index.html` in any browser. No server, no internet, no build. Styled with 
 435 questions (231 written + 204 signs). Run `index.html?selftest` (or `node check.js`) to verify
 the bank, the artwork, the generated sign options, the gallery-only rule and the scoring.
 
-Handy URLs: `index.html#signs/rules`, `index.html#signs/marker` and `index.html#study/trf/2` open a Signs page, a sign family or a Study category at that page (the address
+Handy URLs: `index.html#signs/rules`, `index.html#signs/warning`, `index.html#signs/marker` and `index.html#study/trf/2` open a Signs page, a sign group, a sign family or a Study category at that page (the address
 updates as you page, so a reload or a shared link lands in the same place); `index.html#exam` drops straight into a fresh paper; `index.html#exam-sign` (or
 `-mark`, `-alco`, `-fit`, `-aid`, `-trf`, `-veh`, `-etq`, `-safe`, `-maint`, `-moto`, `-proc`)
 drills one category under exam conditions without writing to your history.
@@ -164,8 +164,9 @@ Three things to know about that material:
 
 ## Adding a page
 
-Every screen shares one skeleton: a top bar (Back on the left, the title in the middle, an
-optional kebab menu or help button on the right), the content area, and the section tab bar
+Every screen shares one skeleton. Top-level pages (the tab-bar destinations) have a large
+left-aligned title and no Back; deeper pages get a top bar (Back on the left, the title in the
+middle). Either can carry an optional kebab menu or help button on the right, the content area, and the section tab bar
 at the bottom: a floating bar with a round **Start exam** button in the middle. Sections that do
 not fit go under its last item, **More**; `NAV_ORDER` sets which ones stay in the bar first. While a
 paper is running the tab bar and Back are hidden, and the only way out is **Cancel exam** in the
