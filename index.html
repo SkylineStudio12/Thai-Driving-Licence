@@ -70,6 +70,17 @@ body{margin:0;background:var(--background);color:var(--foreground);
 .icon-btn:hover,.icon-btn[aria-expanded=true]{background:var(--accent-bg)}
 .icon-btn svg{width:20px;height:20px}
 .icon-btn[hidden]{display:none}
+/* top-level pages (every tab-bar destination): no bar, no Back, a large left-aligned title that
+   scrolls with the page; the optional action floats top-right as a round button */
+.topbar.large{position:static;border-bottom:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.topbar.large .topbar-row{grid-template-columns:1fr auto;min-height:0;gap:0;padding-top:12px}
+.topbar.large .tb-slot:first-child{display:none}
+.topbar.large .tb-slot.end{grid-column:2;grid-row:1;min-height:8px}
+.topbar.large h1{grid-column:1 / -1;grid-row:2;text-align:left;font-size:32px;font-weight:700;
+  letter-spacing:-.03em;line-height:1.15;margin:4px 0 0;white-space:normal}
+.topbar.large .icon-btn{width:42px;height:42px;border-radius:999px;background:var(--muted)}
+.topbar.large .icon-btn:hover{background:color-mix(in srgb,var(--muted) 80%,var(--foreground) 8%)}
+
 /* floating pill tab bar with a round Start-exam button in the middle */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;pointer-events:none;
   padding:0 12px calc(10px + env(safe-area-inset-bottom))}
@@ -575,8 +586,10 @@ function renderChrome(){
   document.getElementById('pageTitle').textContent = title;
   document.title = `${title} · Thai Motorcycle Licence`;
   const running = tab === 'mock' && exam && !exam.submitted;
+  const isRoot = !navState().sub && !(tab === 'mock' && exam);   // a tab-bar destination itself
   document.body.classList.toggle('exam-mode', !!running);
-  backBtn.hidden = running || !(navState().d > 0 || canGoUp());
+  document.querySelector('.topbar').classList.toggle('large', isRoot);
+  backBtn.hidden = isRoot || running || !(navState().d > 0 || canGoUp());
   const slot = document.getElementById('tbAction');
   slot.innerHTML = '';
   if (meta.menu && meta.menu.length) {
