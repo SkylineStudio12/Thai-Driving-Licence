@@ -178,6 +178,36 @@ label.row input{margin-top:4px}
 .list .count{flex:0 0 auto;font-size:13px;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
 .list .chev{flex:0 0 auto;width:16px;height:16px;color:var(--muted-foreground)}
 
+.list .thumb{flex:0 0 auto;width:40px;height:40px;object-fit:contain;background:#fff;
+  border:1px solid var(--border);border-radius:calc(var(--radius) - 2px);padding:3px}
+.list .count{margin-left:auto}
+
+/* General rules (Signs): intro card + one row per shape/colour rule */
+.intro{display:flex;gap:16px;align-items:flex-start}
+.intro .ico{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:48px;height:48px;
+  border-radius:var(--radius);background:var(--muted)}
+.intro .ico svg{width:24px;height:24px}
+.intro h2{margin:2px 0 6px;font-size:18px}
+.intro p{margin:0 0 8px;font-size:14.5px;color:var(--muted-foreground)}
+.intro p:last-child{margin-bottom:0}
+.section-head{margin:28px 0 12px}
+.section-head h2{margin:0;font-size:18px}
+.section-head p{margin:2px 0 0;font-size:14.5px;color:var(--muted-foreground)}
+.rule{display:flex;align-items:center;gap:14px;padding:14px 16px;margin:10px 0}
+.rule .art{flex:0 0 112px;width:112px;min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;
+  align-self:stretch;padding-right:14px;border-right:1px solid var(--border)}
+.rule .art img{width:44px;height:44px;object-fit:contain;background:#fff;border-radius:6px;padding:2px}
+.rule .art img:only-child{width:56px;height:56px}
+.rule .art.three img{width:30px;height:30px;padding:1px}
+.rule .txt{flex:1 1 auto;min-width:0}
+.rule .top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.rule h3{margin:0;font-size:15.5px;font-weight:600;color:var(--foreground);text-transform:none;letter-spacing:-.01em}
+.rule p{margin:4px 0 0;font-size:14px;color:var(--muted-foreground)}
+.badge{flex:0 0 auto;display:inline-flex;align-items:center;font-size:12px;font-weight:500;padding:2px 10px;
+  border-radius:999px;background:var(--secondary);color:var(--secondary-foreground);white-space:nowrap}
+.callout{display:flex;gap:10px;align-items:flex-start;margin:18px 4px;font-size:14px;color:var(--muted-foreground)}
+.callout svg{flex:0 0 auto;width:18px;height:18px;margin-top:2px}
+
 /* Alert */
 .why{background:var(--warning-bg);border:1px solid color-mix(in srgb,var(--warning) 35%,transparent);
   padding:12px 14px;border-radius:var(--radius);font-size:14.5px;margin:12px 0 0}
@@ -373,7 +403,9 @@ const LUCIDE = {
   'handshake': '<path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/>',
   'shield-check': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
   'wrench': '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/>',
-  'motorbike': '<path d="m18 14-1-3"/><path d="m3 9 6 2a2 2 0 0 1 2-2h2a2 2 0 0 1 1.99 1.81"/><path d="M8 17h3a1 1 0 0 0 1-1 6 6 0 0 1 6-6 1 1 0 0 0 1-1v-.75A5 5 0 0 0 17 5"/><circle cx="19" cy="17" r="3"/><circle cx="5" cy="17" r="3"/>'
+  'motorbike': '<path d="m18 14-1-3"/><path d="m3 9 6 2a2 2 0 0 1 2-2h2a2 2 0 0 1 1.99 1.81"/><path d="M8 17h3a1 1 0 0 0 1-1 6 6 0 0 1 6-6 1 1 0 0 0 1-1v-.75A5 5 0 0 0 17 5"/><circle cx="19" cy="17" r="3"/><circle cx="5" cy="17" r="3"/>',
+  'layers': '<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/><path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/><path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/>',
+  'info': '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>'
 };
 const lucide = n => `<svg class="lucide lucide-${n}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LUCIDE[n]}</svg>`;
 /* ---- PAGES: one entry per section. To add a page: give it a key, a title, a Lucide icon
@@ -404,7 +436,12 @@ const PAGES = {
     : {help:{title:'Studying the bank', body:`
         <p>Every question in the bank, by category, with the right answer and the reason shown.</p>
         <p>Pick a category to read it. Read a category end to end when the History page shows it below 90%.</p>`}}},
-  signs:   {title:'Signs', icon:'signpost', view: v => viewSigns(v)},
+  signs:   {title:'Signs', icon:'signpost', view: v => viewSigns(v), meta: () => {
+    const s = navState();
+    if (signsSub() === 'rules') return {title:'General rules'};
+    if (signsSub() === 'fam') return {title: FAM_TITLE[s.fam][0]};
+    return {};
+  }},
   numbers: {title:'Key numbers', icon:'hash', view: v => viewNumbers(v)},
   process: {title:'The process', icon:'list-checks', view: v => viewProcess(v)},
   phrases: {title:'Thai phrases', icon:'languages', view: v => viewPhrases(v)},
@@ -418,7 +455,7 @@ const TABS = Object.entries(PAGES).map(([k, p]) => [k, p.title, p.icon]);
 const navState = () => history.state || {tab, d:0};
 function go(k){
   closePopover();
-  const atRoot = !(k === 'study' && studyCatOpen());
+  const atRoot = !(k === tab && navState().sub && k !== 'mock');
   if (k === tab && atRoot && !(k === 'mock' && exam && exam.submitted)) { scrollTo(0,0); return; }
   if (k === 'mock' && exam && exam.submitted) exam = null;   // a finished paper is not resumed
   const sub = k === 'mock' && exam && !exam.submitted ? 'exam' : undefined;   // a running paper keeps going
@@ -521,10 +558,10 @@ helpDlg.addEventListener('click', e => { if (e.target === helpDlg) helpDlg.close
 const backBtn = document.getElementById('backBtn');
 backBtn.innerHTML = lucide('chevron-left');
 /* a sub-page opened straight from a link has nothing behind it, so Back goes up to its parent instead */
-const canGoUp = () => studyCatOpen();
+const canGoUp = () => !!navState().sub && tab !== 'mock';
 backBtn.onclick = () => {
   if (navState().d > 0) { history.back(); return; }
-  if (studyCatOpen()) { history.replaceState({tab:'study', d:0}, '', '#study'); render(); scrollTo(0,0); }
+  if (canGoUp()) { history.replaceState({tab, d:0}, '', '#' + tab); render(); scrollTo(0,0); }
 };
 function renderChrome(){
   const page = PAGES[tab], meta = (page.meta && page.meta()) || {};
@@ -878,37 +915,71 @@ const FAM_TITLE = {
   work:      ['Roadworks: text signs',    'ป้ายข้อความในงานก่อสร้าง (ตค)'],
   guide:     ['Guide & information signs','ป้ายแนะนำ']
 };
+/* Signs tab: a "General rules" entry, then the sign families as a list; each opens its own
+   screen ({tab:'signs', sub:'rules'} or {tab:'signs', sub:'fam', fam}; hash #signs/rules, #signs/<fam>). */
+const signsSub = () => { const s = navState();
+  return s.tab !== 'signs' ? null : s.sub === 'rules' ? 'rules' : s.sub === 'fam' && FAM_TITLE[s.fam] ? 'fam' : null; };
+function openSigns(sub, fam){
+  history.pushState({tab:'signs', sub, fam, d:navState().d + 1}, '', '#signs/' + (fam || sub));
+  render(); scrollTo(0,0);
+}
+const chev = () => lucide('chevron-right').replace('class="lucide', 'class="chev lucide');
 function viewSigns(v){
-  if (pageNo.signs === 1) v.appendChild(el(`<div class="card">
-    <p style="margin:0 0 10px">All <b>${SIGNS.length}</b> signs, as the real DLT artwork:
-    <b>บ-</b> regulatory, <b>ต-</b> warning, <b>ตก-</b> roadworks pictograms,
-    <b>ตค-</b> roadworks text, <b>น-</b> guide. Signs are the cheapest marks on the paper — they
-    are pictures, so the language barrier does not apply.</p>
-    <p style="margin:0 0 6px"><b>Learn the shape and colour logic first.</b> It lets you answer signs
-    you have never seen:</p>
-    <ul style="margin:0;padding-left:20px">
-      <li><b>Red ring, octagon or triangle</b> — ป้ายบังคับ. Enforceable: you must, or must not.</li>
-      <li><b>Blue disc, white symbol</b> — also ป้ายบังคับ, but a command: do <i>this</i>.</li>
-      <li><b>Blue disc with a red ring</b> — one slash = no parking, a cross = no stopping.</li>
-      <li><b>Yellow diamond</b> — ป้ายเตือน. A warning only, no command attached.</li>
-      <li><b>Orange</b> — temporary roadworks. Nearly all of these print their English on the sign,
-        so they are free marks once you know orange means "works", not "danger".</li>
-    </ul>
-    <p style="margin:10px 0 0;font-size:14px;color:var(--dim)">Grouped below by the families the
-    exam confuses on purpose. Each group is worth reading side by side.</p></div>`));
-  /* one flat list in family order, paged; a family heading is drawn wherever the family changes */
-  const ordered = Object.keys(FAM_TITLE).flatMap(f => SIGNS.filter(s => s.fam === f));
-  const pager = pagerHtml('signs', ordered.length);
-  if (pager) v.appendChild(el(pager));
-  let lastFam = null;
-  pageSlice(ordered, pageNo.signs, PAGE_SIZE.signs).forEach(s => {
-    if (s.fam !== lastFam) {
-      const inFam = SIGNS.filter(x => x.fam === s.fam), contd = inFam[0] !== s && lastFam === null;
-      v.appendChild(el(`<h2>${FAM_TITLE[s.fam][0]} · <span class="th">${FAM_TITLE[s.fam][1]}</span>
-        <span class="pill">${inFam.length}</span>${contd ? ' <span class="sub">continued</span>' : ''}</h2>`));
-      lastFam = s.fam;
-    }
-    v.appendChild(el(
+  if (signsSub() === 'rules') return viewSignRules(v);
+  if (signsSub() === 'fam') return viewSignFamily(v, navState().fam);
+  const top = el('<div class="card list"></div>');
+  const r = el(`<button><span class="ico">${lucide('layers')}</span>
+    <span class="txt"><b>General rules</b><span>Shape and colour logic · start here</span></span>${chev()}</button>`);
+  r.onclick = () => openSigns('rules');
+  top.appendChild(r);
+  v.appendChild(top);
+  v.appendChild(el(`<div class="section-head"><h2>Sign families</h2>
+    <p>Grouped by the families the exam confuses on purpose. ${SIGNS.length} signs in all.</p></div>`));
+  const list = el('<div class="card list"></div>');
+  Object.keys(FAM_TITLE).forEach(f => {
+    const inFam = SIGNS.filter(s => s.fam === f);
+    if (!inFam.length) return;
+    const b = el(`<button><img class="thumb" src="${inFam[0].img}" alt="" loading="lazy">
+      <span class="txt"><b>${FAM_TITLE[f][0]}</b>${showThai ? `<span>${FAM_TITLE[f][1]}</span>` : ''}</span>
+      <span class="count">${inFam.length}</span>${chev()}</button>`);
+    b.onclick = () => openSigns('fam', f);
+    list.appendChild(b);
+  });
+  v.appendChild(list);
+}
+const SIGN_RULES = [
+  {imgs:['bo-04','bo-01','bo-02'], title:'Red ring, octagon or triangle', th:'ป้ายบังคับ',
+   text:'Enforceable: you must, or must not.', badge:'Rule'},
+  {imgs:['bo-44'], title:'Blue disc, white symbol', th:'ป้ายบังคับ',
+   text:'Also enforceable, but a command: <i>do this</i>.', badge:'Command'},
+  {imgs:['bo-29','bo-30'], title:'Blue disc with a red ring',
+   text:'One slash = no parking, a cross = no stopping.', badge:'Restriction'},
+  {imgs:['to-38'], title:'Yellow diamond', th:'ป้ายเตือน',
+   text:'A warning only, no command attached.', badge:'Warning'},
+  {imgs:['tg-03'], title:'Orange',
+   text:'Temporary roadworks. Nearly all of these print their English on the sign, so they are free marks once you know orange means "works", not "danger".', badge:'Roadworks'}
+];
+function viewSignRules(v){
+  v.appendChild(el(`<div class="card intro"><span class="ico">${lucide('layers')}</span><div>
+    <h2>All ${SIGNS.length} signs</h2>
+    <p>As the real DLT artwork: <b>บ-</b> regulatory, <b>ต-</b> warning, <b>ตก-</b> roadworks pictograms,
+      <b>ตค-</b> roadworks text, <b>น-</b> guide.</p>
+    <p>Signs are the cheapest marks on the paper: they are pictures, so the language barrier does not apply.</p>
+  </div></div>`));
+  v.appendChild(el(`<div class="section-head"><h2>Learn the shape and colour logic first</h2>
+    <p>It lets you answer signs you have never seen.</p></div>`));
+  SIGN_RULES.forEach(r => v.appendChild(el(`<div class="card rule">
+    <div class="art${r.imgs.length > 2 ? ' three' : ''}">${r.imgs.map(i => `<img src="signs/${i}.png" alt="">`).join('')}</div>
+    <div class="txt"><div class="top"><h3>${r.title}</h3><span class="badge">${r.badge}</span></div>
+      <p>${showThai && r.th ? `<span class="th">${r.th}.</span> ` : ''}${r.text}</p></div></div>`)));
+  const go2 = el(`<p class="callout">${lucide('info')}<span>The sign families on the Signs page are grouped
+    the way the exam confuses them on purpose. Each group is worth reading side by side.</span></p>`);
+  v.appendChild(go2);
+}
+function viewSignFamily(v, f){
+  const inFam = SIGNS.filter(s => s.fam === f);
+  v.appendChild(el(`<p class="sub" style="margin:16px 0 0">${showThai ? FAM_TITLE[f][1] + ' · ' : ''}${inFam.length} signs</p>`));
+  inFam.forEach(s => v.appendChild(el(
       `<div class="card"><div class="row" style="gap:16px;align-items:flex-start;flex-wrap:nowrap">
         ${signImg(s,96)}
         <div style="flex:1;min-width:0">
@@ -917,10 +988,7 @@ function viewSigns(v){
             ${s.gallery ? '<span class="pill" style="margin-left:2px">recognise only</span>' : ''}</p>
           <p class="th" style="margin:0 0 7px">${esc(s.th)}</p>
           <p style="margin:0;font-size:14px;color:var(--dim)">${esc(s.w)}</p>
-        </div></div></div>`));
-  });
-  if (pager) v.appendChild(el(pagerHtml('signs', ordered.length)));
-  wirePagers(v, 'signs');
+        </div></div></div>`)));
 }
 
 /* ---------- KEY NUMBERS ---------- */
@@ -1278,12 +1346,13 @@ function selftest(){
 const fromHash = location.hash.slice(1).split('/')[0];
 const hashParts = location.hash.slice(1).split('/');
 const fromCat = fromHash === 'study' && CATS[hashParts[1]] ? hashParts[1] : null;   // #study/trf/2
-const fromPage = +hashParts[fromCat ? 2 : 1] || 1;       // #signs/3 opens page 3
+const fromSigns = fromHash === 'signs' ? (hashParts[1] === 'rules' ? 'rules' : FAM_TITLE[hashParts[1]] ? 'fam' : null) : null;
+const fromPage = +hashParts[fromCat ? 2 : 1] || 1;       // #study/trf/2 opens page 2
 if (TABS.some(([k]) => k === fromHash)) tab = fromHash;
 if (pageNo[fromHash] !== undefined) pageNo[fromHash] = fromPage;
 if (fromCat) studyCat = fromCat;
-history.replaceState({tab, d:0, sub: fromHash.startsWith('exam') ? 'exam' : fromCat ? 'cat' : undefined,
-  cat: fromCat || undefined}, '', location.hash || '#' + tab);
+history.replaceState({tab, d:0, sub: fromHash.startsWith('exam') ? 'exam' : fromCat ? 'cat' : fromSigns || undefined,
+  cat: fromCat || undefined, fam: fromSigns === 'fam' ? hashParts[1] : undefined}, '', location.hash || '#' + tab);
 if (location.search.includes('selftest')) selftest();
 /* #exam = straight into a fresh paper. #exam-sign, #exam-trf, … = one category
    under exam conditions; those are not written to history. */
