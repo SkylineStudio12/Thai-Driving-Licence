@@ -2,7 +2,7 @@
 
 Live: https://ramidzpower.github.io/thai-moto-license/
 
-Open `index.html` in any browser. No server, no internet, no build. Works on a phone
+Open `index.html` in any browser. No server, no internet, no build. Styled with the shadcn/ui design system (neutral theme, light and dark), ported to plain CSS in `index.html`. Works on a phone
 (AirDrop the folder, or put it in iCloud Drive and open from Files).
 
 - **Mock exam** — 50 questions, 60-minute timer, no feedback until you submit, 45/50 to pass.
@@ -161,3 +161,21 @@ Three things to know about that material:
   this correct parking?"). Each page is a single flat scan, so the individual drawings cannot be
   extracted cleanly. Their *rules* are in the bank as self-contained questions; the picture-only
   phrasings are not.
+
+## Adding a page
+
+Every screen shares one skeleton: a top bar (Back on the left, the title in the middle, an
+optional kebab menu or help button on the right), the content area, and the section tab bar
+at the bottom. Sections that do not fit the tab bar go under its last item, **More**.
+
+To add a section, add an entry to `PAGES` in `index.html`:
+
+```js
+myPage: {title:'My page', icon:'lucide-icon-name', view: v => viewMyPage(v),
+         meta: () => ({help:{title:'About this page', body:'<p>…</p>'}})},
+```
+
+`meta()` is optional and can return `title` (overrides the bar title), `help` (adds a help
+button that opens a dialog) or `menu` (`[{label, icon, run, danger}]`, adds a kebab menu).
+Icons come from Lucide and are inlined in `LUCIDE`; copy the inner SVG of any new icon there.
+Back follows browser history, so the phone's back gesture and the top-bar Back agree.

@@ -2,92 +2,234 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Thai Motorcycle Licence — Theory Trainer</title>
 <style>
+/* Design system: shadcn/ui (New York, neutral base colour), ported to plain CSS so the app
+   stays a single offline file with no build. Tokens mirror shadcn's CSS variables; the old
+   names (--ink, --dim, --line, --accent, --ok, --bad, --warn) are kept as aliases because the
+   render code uses them in inline styles. */
 :root{
-  --bg:#f7f7f5; --card:#fff; --ink:#1b1b1a; --dim:#6a6a67; --line:#e2e2de;
-  --accent:#0b5fa5; --ok:#137a4a; --bad:#b3261e; --warn:#8a5a00; --warnbg:#fdf6e3;
+  --radius:.625rem;
+  --background:#ffffff; --foreground:#0a0a0a;
+  --card:#ffffff; --card-foreground:#0a0a0a;
+  --primary:#171717; --primary-foreground:#fafafa;
+  --secondary:#f5f5f5; --secondary-foreground:#171717;
+  --muted:#f5f5f5; --muted-foreground:#737373;
+  --accent-bg:#f5f5f5;
+  --destructive:#dc2626; --success:#059669; --warning:#d97706;
+  --border:#e5e5e5; --input:#e5e5e5; --ring:#a3a3a3;
+  --success-bg:#ecfdf5; --destructive-bg:#fef2f2; --warning-bg:#fffbeb;
+  --shadow-xs:0 1px 2px 0 rgb(0 0 0 / .05);
+  --shadow-sm:0 1px 3px 0 rgb(0 0 0 / .1),0 1px 2px -1px rgb(0 0 0 / .1);
 }
 @media (prefers-color-scheme:dark){
-  :root{ --bg:#131315; --card:#1c1c1f; --ink:#ececea; --dim:#9a9a97; --line:#2e2e33;
-         --accent:#63a8e8; --ok:#4cc38a; --bad:#f2837a; --warn:#e0b34a; --warnbg:#2a2415; }
+  :root{
+    --background:#0a0a0a; --foreground:#fafafa;
+    --card:#171717; --card-foreground:#fafafa;
+    --primary:#e5e5e5; --primary-foreground:#171717;
+    --secondary:#262626; --secondary-foreground:#fafafa;
+    --muted:#262626; --muted-foreground:#a1a1a1;
+    --accent-bg:#262626;
+    --destructive:#f87171; --success:#34d399; --warning:#fbbf24;
+    --border:rgb(255 255 255 / .1); --input:rgb(255 255 255 / .15); --ring:#737373;
+    --success-bg:rgb(52 211 153 / .08); --destructive-bg:rgb(248 113 113 / .08); --warning-bg:rgb(251 191 36 / .08);
+  }
 }
-*{box-sizing:border-box}
-/* buttons do not inherit colour from the page — without this they render as UA black
-   on the dark card background and the mock exam options become unreadable */
+:root{
+  --bg:var(--background); --ink:var(--foreground); --dim:var(--muted-foreground); --line:var(--border);
+  --accent:var(--primary); --ok:var(--success); --bad:var(--destructive); --warn:var(--warning); --warnbg:var(--warning-bg);
+}
+*{box-sizing:border-box;border-color:var(--border)}
+/* buttons do not inherit colour from the page; without this they render as UA black on dark cards */
 button{color:inherit}
-/* default link blue is near-invisible on the dark card; this also fixes the gecc.dlt.go.th link */
-a{color:var(--accent)}
+a{color:var(--foreground);text-decoration:underline;text-underline-offset:4px;font-weight:500}
+a:hover{color:var(--muted-foreground)}
+:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--ring) 50%,transparent)}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);
-  font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
-.wrap{max-width:780px;margin:0 auto;padding:0 14px}
-#view{padding-bottom:80px}
-header{position:sticky;top:0;z-index:9;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 0 0}
-h1{font-size:17px;margin:0 0 2px;letter-spacing:-.01em}
-.sub{font-size:12.5px;color:var(--dim);margin:0 0 10px}
-nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
-nav::-webkit-scrollbar{display:none}
-nav button{flex:0 0 auto;background:none;border:0;border-bottom:2px solid transparent;
-  color:var(--dim);font:inherit;font-size:14px;padding:8px 11px;cursor:pointer;white-space:nowrap}
-nav button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
-h2{font-size:15px;margin:22px 0 8px;letter-spacing:-.01em}
-h3{font-size:13.5px;margin:16px 0 6px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+body{margin:0;background:var(--background);color:var(--foreground);
+  font:15px/1.6 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:780px;margin:0 auto;padding:0 16px}
+#view{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+
+/* ---- page skeleton: top bar (back · title · action) + bottom tab bar ---- */
+.topbar{position:sticky;top:0;z-index:20;border-bottom:1px solid var(--border);
+  padding-top:env(safe-area-inset-top);
+  background:color-mix(in srgb,var(--background) 85%,transparent);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.topbar-row{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;min-height:56px}
+.topbar h1{grid-column:2;text-align:center;font-size:16px;font-weight:600;margin:0;letter-spacing:-.015em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-slot{display:flex}
+.tb-slot.end{justify-content:flex-end}
+.sub{font-size:13px;color:var(--muted-foreground);margin:0 0 12px}
+.icon-btn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;
+  border:1px solid transparent;background:none;color:var(--foreground);
+  border-radius:calc(var(--radius) - 2px);cursor:pointer;padding:0}
+.icon-btn:hover,.icon-btn[aria-expanded=true]{background:var(--accent-bg)}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn[hidden]{display:none}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;border-top:1px solid var(--border);
+  padding-bottom:env(safe-area-inset-bottom);
+  background:color-mix(in srgb,var(--background) 90%,transparent);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.tabbar-row{display:flex;max-width:780px;margin:0 auto;padding:0 4px}
+.tabbar button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:0;padding:8px 2px 7px;font:inherit;font-size:11px;font-weight:500;line-height:1.2;
+  color:var(--muted-foreground);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tabbar button span{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabbar button svg{width:22px;height:22px;stroke-width:1.75}
+.tabbar button:hover{color:var(--foreground)}
+.tabbar button[aria-current=page]{color:var(--foreground)}
+.tabbar button[aria-current=page] svg{stroke-width:2.25}
+
+/* DropdownMenu / Popover */
+.popover{position:fixed;z-index:60;min-width:200px;max-width:calc(100vw - 16px);padding:4px;
+  background:var(--card);color:var(--card-foreground);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:0 4px 6px -1px rgb(0 0 0 / .1),0 2px 4px -2px rgb(0 0 0 / .1);
+  animation:pop-in .12s ease-out}
+.popover[hidden]{display:none}
+@keyframes pop-in{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.popover{animation:none}}
+.popover .label{font-size:12px;font-weight:500;color:var(--muted-foreground);padding:6px 8px 4px}
+.popover button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;
+  border-radius:calc(var(--radius) - 4px);padding:7px 8px;font:inherit;font-size:14px;color:inherit;cursor:pointer}
+.popover button:hover,.popover button:focus-visible{background:var(--accent-bg);box-shadow:none}
+.popover button[aria-current=page]{font-weight:600}
+.popover button svg{flex:0 0 auto;width:16px;height:16px;color:var(--muted-foreground)}
+.popover button.danger,.popover button.danger svg{color:var(--destructive)}
+
+/* Dialog (help) */
+dialog.dlg{width:calc(100% - 32px);max-width:480px;max-height:calc(100dvh - 64px);padding:24px;margin:auto;
+  background:var(--background);color:var(--foreground);border:1px solid var(--border);
+  border-radius:calc(var(--radius) + 2px);box-shadow:0 10px 15px -3px rgb(0 0 0 / .1),0 4px 6px -4px rgb(0 0 0 / .1)}
+dialog.dlg::backdrop{background:rgb(0 0 0 / .5)}
+dialog.dlg h2{margin:0 32px 8px 0;font-size:18px}
+dialog.dlg .dlg-body{font-size:14.5px;color:var(--muted-foreground)}
+dialog.dlg .dlg-body p,dialog.dlg .dlg-body li{font-size:14.5px}
+dialog.dlg .dlg-body b{color:var(--foreground)}
+dialog.dlg .dlg-close{position:absolute;top:12px;right:12px;width:32px;height:32px;opacity:.7}
+dialog.dlg .dlg-close:hover{opacity:1}
+dialog.dlg .dlg-foot{display:flex;justify-content:flex-end;margin-top:20px}
+
+/* Card */
+.card{background:var(--card);color:var(--card-foreground);border:1px solid var(--border);
+  border-radius:calc(var(--radius) + 4px);padding:20px;margin:16px 0;box-shadow:var(--shadow-xs)}
+@media(min-width:640px){.card{padding:24px}}
+h2{font-size:16px;font-weight:600;margin:28px 0 10px;letter-spacing:-.015em;line-height:1.35}
+h3{font-size:12px;font-weight:500;margin:18px 0 6px;color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.06em}
 p,li{font-size:15px}
-.th{font-size:14.5px;color:var(--dim);line-height:1.5}
-.btn{background:var(--accent);color:#fff;border:0;border-radius:9px;padding:11px 18px;
-  font:inherit;font-weight:600;cursor:pointer}
-.btn.ghost{background:none;color:var(--accent);border:1px solid var(--line)}
-.btn:disabled{opacity:.4;cursor:default}
+.th{font-size:14.5px;color:var(--muted-foreground);line-height:1.5}
+
+/* Button: default + outline variants */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;
+  background:var(--primary);color:var(--primary-foreground);border:1px solid transparent;
+  border-radius:calc(var(--radius) - 2px);padding:7px 16px;font:inherit;font-size:14px;font-weight:500;
+  cursor:pointer;box-shadow:var(--shadow-xs);transition:background .15s,opacity .15s}
+.btn:hover{background:color-mix(in srgb,var(--primary) 90%,transparent)}
+.btn.ghost{background:var(--background);color:var(--foreground);border-color:var(--border)}
+.btn.ghost:hover{background:var(--accent-bg)}
+@media (prefers-color-scheme:dark){.btn.ghost{background:color-mix(in srgb,var(--input) 30%,transparent);border-color:var(--input)}
+  .btn.ghost:hover{background:color-mix(in srgb,var(--input) 50%,transparent)}}
+.btn:disabled{opacity:.5;cursor:default;pointer-events:none}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.opt{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);
-  border-radius:10px;padding:12px 14px;margin:8px 0;font:inherit;cursor:pointer}
-.opt:hover{border-color:var(--accent)}
-.opt[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-.opt.right{border-color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok)}
-.opt.wrong{border-color:var(--bad);box-shadow:inset 0 0 0 1px var(--bad)}
-.opt b{display:inline-block;min-width:1.3em;color:var(--dim);font-weight:600}
-.why{background:var(--warnbg);border-left:3px solid var(--warn);padding:10px 12px;
-  border-radius:0 8px 8px 0;font-size:14.5px;margin:10px 0 0}
-.note{color:var(--warn);font-size:13.5px;margin-top:6px}
-.bar{height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin:10px 0}
-.bar i{display:block;height:100%;background:var(--accent)}
-.pill{font-size:11.5px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--dim)}
-.big{font-size:40px;font-weight:700;letter-spacing:-.03em;line-height:1}
-.ok{color:var(--ok)} .bad{color:var(--bad)}
+input[type=checkbox]{flex:0 0 auto;width:16px;height:16px;accent-color:var(--primary);margin:0}
+label.row{flex-wrap:nowrap;align-items:flex-start;cursor:pointer}
+label.row input{margin-top:4px}
+
+/* Answer options: radio-card pattern */
+.opt{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px 14px;margin:8px 0;font:inherit;font-size:15px;cursor:pointer;
+  box-shadow:var(--shadow-xs);transition:background .15s,border-color .15s}
+.opt:hover{background:var(--accent-bg)}
+.opt[aria-pressed=true]{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary)}
+.opt.right{border-color:var(--success);background:var(--success-bg);box-shadow:0 0 0 1px var(--success)}
+.opt.wrong{border-color:var(--destructive);background:var(--destructive-bg);box-shadow:0 0 0 1px var(--destructive)}
+.opt b{display:inline-block;min-width:1.4em;color:var(--muted-foreground);font-weight:500}
+
+/* Alert */
+.why{background:var(--warning-bg);border:1px solid color-mix(in srgb,var(--warning) 35%,transparent);
+  padding:12px 14px;border-radius:var(--radius);font-size:14.5px;margin:12px 0 0}
+.why b:first-child{color:var(--warning)}
+.note{color:var(--warning);font-size:13.5px;margin-top:6px}
+
+/* Progress */
+.bar{height:8px;background:color-mix(in srgb,var(--primary) 15%,transparent);border-radius:99px;overflow:hidden;margin:12px 0}
+.bar i{display:block;height:100%;background:var(--primary);border-radius:99px;transition:width .2s}
+
+/* Badge (outline) */
+.pill{display:inline-flex;align-items:center;font-size:12px;font-weight:500;line-height:1.4;padding:1px 8px;
+  border-radius:calc(var(--radius) - 4px);border:1px solid var(--border);color:var(--foreground);
+  vertical-align:middle;white-space:nowrap}
+.big{font-size:44px;font-weight:700;letter-spacing:-.04em;line-height:1}
+.ok{color:var(--success)} .bad{color:var(--destructive)}
+
+/* Table */
 table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line)}
-th{color:var(--dim);font-weight:600;font-size:12.5px}
-/* the sign PNGs are transparent with black glyphs, so they MUST sit on white —
-   on the dark card background the arrows and figures would disappear */
-.sign{object-fit:contain;background:#fff;border-radius:10px;padding:5px;display:block}
-.pager{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:14px 0}
-.pager button{min-width:40px;min-height:40px;padding:6px 10px;border:1px solid var(--line);background:var(--card);
-  border-radius:9px;font:inherit;font-size:14px;cursor:pointer}
-.pager button[aria-current=page]{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
-.pager button:disabled{opacity:.4;cursor:default}
-.pager .gap{color:var(--dim);padding:0 2px}
-.pager .count{margin-left:auto;font-size:12.5px;color:var(--dim)}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+@media (hover:hover){tbody tr:hover{background:color-mix(in srgb,var(--muted) 50%,transparent)}}
+th{color:var(--muted-foreground);font-weight:500;font-size:13px}
+
+/* the sign PNGs are transparent with black glyphs, so they MUST sit on white */
+.sign{object-fit:contain;background:#fff;border-radius:var(--radius);padding:5px;display:block;
+  border:1px solid var(--border)}
+
+/* Pagination */
+.pager{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:16px 0}
+.pager button{min-width:36px;min-height:36px;padding:6px 10px;border:1px solid transparent;background:none;
+  border-radius:calc(var(--radius) - 2px);font:inherit;font-size:14px;font-weight:500;cursor:pointer}
+.pager button:hover{background:var(--accent-bg)}
+.pager button[aria-current=page]{background:var(--background);border-color:var(--border);box-shadow:var(--shadow-xs)}
+@media (prefers-color-scheme:dark){.pager button[aria-current=page]{background:color-mix(in srgb,var(--input) 30%,transparent);border-color:var(--input)}}
+.pager button:disabled{opacity:.5;cursor:default;pointer-events:none}
+.pager .gap{color:var(--muted-foreground);padding:0 2px}
+.pager .count{margin-left:auto;font-size:13px;color:var(--muted-foreground)}
 .mono{font-variant-numeric:tabular-nums}
-.timer{font-variant-numeric:tabular-nums;font-weight:600}
-.timer.low{color:var(--bad)}
-details{border-top:1px solid var(--line);padding:10px 0}
-summary{cursor:pointer;font-weight:600;font-size:15px}
-kbd{font:inherit;font-size:14px;background:var(--bg);border:1px solid var(--line);
-  border-radius:5px;padding:1px 6px}
+.timer{font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;padding:2px 10px;
+  border-radius:calc(var(--radius) - 4px);background:var(--secondary)}
+.timer.low{color:var(--destructive);background:var(--destructive-bg)}
+
+/* Accordion */
+details{border-bottom:1px solid var(--border);padding:0}
+details:last-child{border-bottom:0}
+summary{cursor:pointer;font-weight:500;font-size:15px;padding:14px 0;list-style:none;
+  display:flex;justify-content:space-between;align-items:center;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";flex:0 0 auto;width:7px;height:7px;margin-right:4px;
+  border-right:1.5px solid var(--muted-foreground);border-bottom:1.5px solid var(--muted-foreground);
+  transform:translateY(-2px) rotate(45deg);transition:transform .2s}
+details[open]>summary::after{transform:translateY(2px) rotate(-135deg)}
+summary:hover{text-decoration:underline;text-underline-offset:4px}
+details>:not(summary){margin-top:0}
+details[open]{padding-bottom:12px}
+
+/* Kbd */
+kbd{font:inherit;font-size:12px;font-weight:500;background:var(--muted);color:var(--muted-foreground);
+  border-radius:4px;padding:1px 6px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 @media(max-width:520px){.grid2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<header><div class="wrap">
-  <h1>Thai Motorcycle Licence — Theory Trainer</h1>
-  <p class="sub">ใบอนุญาตขับรถจักรยานยนต์ · 50 questions · 60 minutes · pass at 45 (90%)</p>
-  <nav id="nav"></nav>
+<!-- Page skeleton: every screen gets the same top bar (Back · title · optional action),
+     content in #view, and the section tab bar at the bottom. Screens describe themselves
+     in PAGES (see the script); the chrome is drawn by renderChrome(). -->
+<header class="topbar"><div class="wrap topbar-row">
+  <div class="tb-slot"><button class="icon-btn" id="backBtn" aria-label="Back" hidden></button></div>
+  <h1 id="pageTitle">Mock exam</h1>
+  <div class="tb-slot end" id="tbAction"></div>
 </div></header>
 <div class="wrap" id="view"></div>
+<nav class="tabbar" aria-label="Sections"><div class="tabbar-row" id="tabs"></div></nav>
+<div class="popover" id="popover" role="menu" hidden></div>
+<dialog class="dlg" id="helpDlg" aria-labelledby="helpTitle">
+  <h2 id="helpTitle"></h2>
+  <div class="dlg-body" id="helpBody"></div>
+  <div class="dlg-foot"><button class="btn" id="helpOk">Got it</button></div>
+  <button class="icon-btn dlg-close" id="helpClose" aria-label="Close"></button>
+</dialog>
 
 <script src="bank.js"></script>
 <script src="signs.js"></script>
@@ -172,21 +314,209 @@ let tab = 'mock';
 let exam = null;                  // {qs, pick[], started, deadline, submitted}
 
 /* ---------- shell ---------- */
-const TABS = [['mock','Mock exam'],['study','Study'],['signs','Signs'],
-              ['numbers','Key numbers'],['process','The process'],['phrases','Thai phrases'],['history','History']];
-function render(){
-  const nav = document.getElementById('nav');
-  nav.innerHTML = '';
-  TABS.forEach(([k,label]) => {
-    const b = document.createElement('button');
-    b.textContent = label; b.setAttribute('aria-selected', k===tab);
-    b.onclick = () => { tab = k; location.hash = k; render(); scrollTo(0,0); };
-    nav.appendChild(b);
+/* Lucide icons (lucide.dev, ISC licence), inlined from lucide-static 1.73.0 so the app stays offline */
+const LUCIDE = {
+  'clipboard-check': '<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+  'book-open': '<path d="M12 5v16"/><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/>',
+  'signpost': '<path d="M12 13v8"/><path d="M12 3v3"/><path d="M2.354 10.354a1.207 1.207 0 0 1 0-1.708l2.06-2.06A2 2 0 0 1 5.828 6h12.344a2 2 0 0 1 1.414.586l2.06 2.06a1.207 1.207 0 0 1 0 1.708l-2.06 2.06a2 2 0 0 1-1.414.586H5.828a2 2 0 0 1-1.414-.586z"/>',
+  'hash': '<line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/>',
+  'list-checks': '<path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/>',
+  'languages': '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
+  'history': '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+  'chevron-left': '<path d="m15 18-6-6 6-6"/>',
+  'ellipsis': '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+  'ellipsis-vertical': '<circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>',
+  'circle-help': '<circle cx="12" cy="12" r="10"/><path d="M9 9.5a3 2.5 0 016 0c0 2-2 2-3 3.5"/><path d="M12 17h.01"/>',
+  'x': '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  'trash-2': '<path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  'log-out': '<path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>'
+};
+const lucide = n => `<svg class="lucide lucide-${n}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LUCIDE[n]}</svg>`;
+/* ---- PAGES: one entry per section. To add a page: give it a key, a title, a Lucide icon
+   and a view(v) that fills the content area. meta() is optional and returns per-screen extras:
+     title  - overrides the top-bar title (e.g. while a paper is running)
+     help   - {title, body} adds a help button (circle-help) on the right that opens a dialog
+     menu   - [{label, icon, run, danger}] adds a kebab button on the right with those actions
+   The tab bar lists PAGES in this order; whatever does not fit goes under "More". */
+const PAGES = {
+  mock: {title:'Mock exam', icon:'clipboard-check', view: v => viewMock(v), meta: () =>
+    exam && !exam.submitted ? {title:`Paper · ${exam.i+1} of ${exam.qs.length}`, menu:[
+      {label: showThai ? 'Hide Thai text' : 'Show Thai text', icon:'languages', run: () => { showThai = !showThai; render(); }},
+      {label:'Leave this paper', icon:'log-out', danger:true, run: leaveExam}]}
+    : exam ? {title: exam.retry ? 'Retry result' : 'Result'}
+    : {help:{title:'How the mock exam works', body:`
+        <p><b>${TOTAL} questions, ${MINUTES} minutes, ${PASS} to pass</b> (90%), the same shape as the
+        DLT touchscreen test. You may get ${TOTAL-PASS} wrong, no more.</p>
+        <ul style="padding-left:20px;margin:0">
+          <li>No feedback until you submit. Unanswered questions count as wrong.</li>
+          <li>Picking an answer moves you to the next question; use Previous to change it.</li>
+          <li>Answers are labelled ก ข ค ง, as on the real screen.</li>
+          <li>Sign options are reshuffled every time, so you learn the sign, not the letter.</li>
+          <li>After submitting, every wrong answer comes back with the reason, and you can drill just those.</li>
+        </ul>`}}},
+  study:   {title:'Study', icon:'book-open', view: v => viewStudy(v), meta: () => ({help:{title:'Studying the bank', body:`
+        <p>Every question in the bank, by category, with the right answer and the reason shown.</p>
+        <p>Read a category end to end when the History page shows it below 90%.</p>`}})},
+  signs:   {title:'Signs', icon:'signpost', view: v => viewSigns(v)},
+  numbers: {title:'Key numbers', icon:'hash', view: v => viewNumbers(v)},
+  process: {title:'The process', icon:'list-checks', view: v => viewProcess(v)},
+  phrases: {title:'Thai phrases', icon:'languages', view: v => viewPhrases(v)},
+  history: {title:'History', icon:'history', view: v => viewHistory(v), meta: () =>
+    load().length ? {menu:[{label:'Clear history', icon:'trash-2', danger:true, run: clearHistory}]} : {}},
+};
+const TABS = Object.entries(PAGES).map(([k, p]) => [k, p.title, p.icon]);
+
+/* ---- navigation: each screen is a browser-history entry {tab, sub, d}, so Back (top bar,
+   browser or phone gesture) returns to the previous screen. d = depth; Back hides at 0. */
+const navState = () => history.state || {tab, d:0};
+function go(k){
+  closePopover();
+  if (k === tab && !(k === 'mock' && exam && exam.submitted)) { scrollTo(0,0); return; }
+  if (k === 'mock' && exam && exam.submitted) exam = null;   // a finished paper is not resumed
+  const sub = k === 'mock' && exam && !exam.submitted ? 'exam' : undefined;   // a running paper keeps going
+  history.pushState({tab:k, sub, d:navState().d + 1}, '', '#' + k);
+  tab = k; render(); scrollTo(0,0);
+}
+function beginExam(ids){
+  const st = {tab:'mock', sub:'exam', d:navState().d + (navState().sub === 'result' ? 0 : 1)};
+  if (navState().sub === 'result') history.replaceState(st, '', '#mock');
+  else history.pushState(st, '', '#mock');
+  tab = 'mock'; startExam(ids); scrollTo(0,0);
+}
+function finishExam(){
+  history.replaceState({...navState(), sub:'result'}, '', location.hash);
+  submit(); scrollTo(0,0);
+}
+function leaveExam(){
+  if (exam && !exam.submitted && !confirm('Leave this paper? Your answers will be lost.')) return;
+  if (navState().sub && navState().d > 0) { exam = exam && {...exam, submitted:true, left:true}; history.back(); return; }
+  exam = null; history.replaceState({tab:'mock', d:navState().d}, '', '#mock'); render();
+}
+function clearHistory(){
+  const h = load();
+  if (confirm('Delete all '+h.length+' recorded attempts? This cannot be undone.')) { localStorage.removeItem(KEY); render(); }
+}
+addEventListener('popstate', e => {
+  closePopover();
+  const s = e.state || {tab:'mock', d:0};
+  const toExam = s.tab === 'mock' && s.sub === 'exam';
+  if (exam && !exam.submitted && s.tab === 'mock' && !toExam) {
+    if (!confirm('Leave this paper? Your answers will be lost.')) {
+      history.pushState({tab:'mock', sub:'exam', d:s.d + 1}, '', '#mock'); return;
+    }
+    exam = null;
+  }
+  if (exam && exam.submitted && s.tab === 'mock' && s.sub !== 'result') exam = null;
+  tab = s.tab; render(); scrollTo(0,0);
+});
+
+/* ---- popover (shadcn DropdownMenu): used by the kebab menu and the tab bar's More */
+let popAnchor = null;
+function openPopover(anchor, items, where){
+  const pop = document.getElementById('popover');
+  if (popAnchor === anchor) { closePopover(); return; }
+  closePopover();
+  pop.innerHTML = '';
+  items.forEach(it => {
+    if (it.heading) { pop.appendChild(el(`<div class="label">${it.heading}</div>`)); return; }
+    const b = el(`<button role="menuitem" class="${it.danger ? 'danger' : ''}">${lucide(it.icon)}<span>${esc(it.label)}</span></button>`);
+    if (it.current) b.setAttribute('aria-current', 'page');
+    b.onclick = () => { closePopover(true); it.run(); };
+    pop.appendChild(b);
   });
+  pop.hidden = false;
+  const r = anchor.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
+  pop.style.left = Math.max(8, Math.min(r.right - w, innerWidth - w - 8)) + 'px';
+  pop.style.top = (where === 'above' ? r.top - h - 6 : r.bottom + 6) + 'px';
+  pop.style.transformOrigin = where === 'above' ? 'bottom right' : 'top right';
+  popAnchor = anchor; anchor.setAttribute('aria-expanded', 'true');
+  (pop.querySelector('[aria-current]') || pop.querySelector('button')).focus();
+}
+function closePopover(keepFocus){
+  if (!popAnchor) return;
+  document.getElementById('popover').hidden = true;
+  popAnchor.setAttribute('aria-expanded', 'false');
+  if (!keepFocus && document.body.contains(popAnchor)) popAnchor.focus();
+  popAnchor = null;
+}
+document.addEventListener('pointerdown', e => {
+  if (popAnchor && !e.target.closest('#popover') && !popAnchor.contains(e.target)) closePopover(true);
+});
+document.addEventListener('keydown', e => {
+  if (!popAnchor) return;
+  if (e.key === 'Escape') { e.preventDefault(); closePopover(); return; }
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const f = [...document.querySelectorAll('#popover button')], i = f.indexOf(document.activeElement);
+    f[(i + (e.key === 'ArrowDown' ? 1 : -1) + f.length) % f.length].focus();
+  }
+});
+addEventListener('resize', () => { closePopover(true); renderTabs(); });
+
+/* ---- help dialog (shadcn Dialog), native <dialog> for focus trapping and Escape */
+const helpDlg = document.getElementById('helpDlg');
+function openHelp(h){
+  document.getElementById('helpTitle').textContent = h.title;
+  document.getElementById('helpBody').innerHTML = h.body;
+  helpDlg.showModal();
+}
+document.getElementById('helpClose').innerHTML = lucide('x');
+document.getElementById('helpClose').onclick = () => helpDlg.close();
+document.getElementById('helpOk').onclick = () => helpDlg.close();
+helpDlg.addEventListener('click', e => { if (e.target === helpDlg) helpDlg.close(); });
+
+/* ---- chrome: top bar + tab bar */
+const backBtn = document.getElementById('backBtn');
+backBtn.innerHTML = lucide('chevron-left');
+backBtn.onclick = () => history.back();
+function renderChrome(){
+  const page = PAGES[tab], meta = (page.meta && page.meta()) || {};
+  const title = meta.title || page.title;
+  document.getElementById('pageTitle').textContent = title;
+  document.title = `${title} · Thai Motorcycle Licence`;
+  backBtn.hidden = !(navState().d > 0);
+  const slot = document.getElementById('tbAction');
+  slot.innerHTML = '';
+  if (meta.menu && meta.menu.length) {
+    const b = el(`<button class="icon-btn" aria-label="More actions" aria-haspopup="menu" aria-expanded="false">${lucide('ellipsis-vertical')}</button>`);
+    b.onclick = () => openPopover(b, meta.menu, 'below');
+    slot.appendChild(b);
+  } else if (meta.help) {
+    const b = el(`<button class="icon-btn" aria-label="Help" aria-haspopup="dialog">${lucide('circle-help')}</button>`);
+    b.onclick = () => openHelp(meta.help);
+    slot.appendChild(b);
+  }
+  renderTabs();
+}
+const TAB_MIN_WIDTH = 72;   // px per tab-bar item; below this the labels stop being readable
+function renderTabs(){
+  const row = document.getElementById('tabs');
+  const slots = Math.max(2, Math.floor(Math.min(innerWidth, 780) / TAB_MIN_WIDTH));
+  const fits = TABS.length <= slots;
+  const shown = fits ? TABS : TABS.slice(0, slots - 1), extra = fits ? [] : TABS.slice(slots - 1);
+  row.innerHTML = '';
+  shown.forEach(([k, label, icon]) => {
+    const b = el(`<button>${lucide(icon)}<span>${label}</span></button>`);
+    if (k === tab) b.setAttribute('aria-current', 'page');
+    b.onclick = () => go(k);
+    row.appendChild(b);
+  });
+  if (extra.length) {
+    const inExtra = extra.some(([k]) => k === tab);
+    const cur = inExtra ? extra.find(([k]) => k === tab) : null;
+    const b = el(`<button aria-haspopup="menu" aria-expanded="false">${lucide(cur ? cur[2] : 'ellipsis')}<span>${cur ? cur[1] : 'More'}</span></button>`);
+    if (inExtra) b.setAttribute('aria-current', 'page');
+    b.onclick = () => openPopover(b, extra.map(([k, label, icon]) => ({label, icon, current: k === tab, run: () => go(k)})), 'above');
+    row.appendChild(b);
+  }
+}
+
+function render(){
+  closePopover(true);
+  renderChrome();
   const v = document.getElementById('view');
   v.innerHTML = '';
-  ({mock:viewMock, study:viewStudy, signs:viewSigns, numbers:viewNumbers,
-    process:viewProcess, phrases:viewPhrases, history:viewHistory})[tab](v);
+  PAGES[tab].view(v);
 }
 
 function qText(q){
@@ -260,8 +590,8 @@ function viewMock(v){
       </div>
       <p class="sub" style="margin-top:14px">Bank: ${pool().length} questions available.</p>
     </div>`));
-    v.querySelector('#go').onclick = () => startExam(null);
-    const r = v.querySelector('#retry'); if (r) r.onclick = () => startExam(wrongIds);
+    v.querySelector('#go').onclick = () => beginExam(null);
+    const r = v.querySelector('#retry'); if (r) r.onclick = () => beginExam(wrongIds);
     v.querySelector('#th').onchange = e => { showThai = e.target.checked; };
     v.querySelector('#co').onchange = e => { excludeCarOnly = e.target.checked; render(); };
     v.appendChild(el(resourcesCard()));
@@ -281,7 +611,7 @@ function viewMock(v){
     ${qText(q)}
     <div id="opts"></div>
     <div class="row" style="justify-content:space-between;margin-top:14px">
-      <button class="btn ghost" id="prev" ${exam.i===0?'disabled':''}>&larr; Back</button>
+      <button class="btn ghost" id="prev" ${exam.i===0?'disabled':''}>&larr; Previous</button>
       <div class="row">
         <button class="btn ghost" id="skip">Skip</button>
         ${exam.i===n-1 ? '<button class="btn" id="submit">Submit paper</button>'
@@ -303,12 +633,12 @@ function viewMock(v){
   v.querySelector('#prev').onclick = () => { exam.i--; render(); };
   const nx = v.querySelector('#next'); if (nx) nx.onclick = () => { exam.i++; render(); };
   v.querySelector('#skip').onclick = () => { if (exam.i < n-1) { exam.i++; render(); } };
-  const sb = v.querySelector('#submit'); if (sb) sb.onclick = submit;
+  const sb = v.querySelector('#submit'); if (sb) sb.onclick = finishExam;
 
   const clock = v.querySelector('#clock');
   const paint = () => {
     const ms = exam.deadline - Date.now();
-    if (ms <= 0) { clearInterval(tick); submit(); return; }
+    if (ms <= 0) { clearInterval(tick); finishExam(); return; }
     const s = Math.floor(ms/1000);
     clock.textContent = String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
     clock.classList.toggle('low', s < 300);
@@ -361,10 +691,10 @@ function viewResult(v){
       <button class="btn ghost" id="done">Back</button>
     </div>
   </div>`));
-  v.querySelector('#again').onclick = () => startExam(null);
-  v.querySelector('#done').onclick  = () => { exam = null; render(); };
+  v.querySelector('#again').onclick = () => beginExam(null);
+  v.querySelector('#done').onclick  = leaveExam;
   const dr = v.querySelector('#dr');
-  if (dr) dr.onclick = () => startExam(r.wrong.map(w => w.id));
+  if (dr) dr.onclick = () => beginExam(r.wrong.map(w => w.id));
 
   if (r.wrong.length){
     v.appendChild(el(`<h2>What you got wrong (${r.wrong.length})</h2>`));
@@ -414,7 +744,7 @@ function pagerHtml(key, total){
 }
 function wirePagers(v, key){
   v.querySelectorAll(`[data-pager="${key}"] button`).forEach(b => b.onclick = () => {
-    pageNo[key] = +b.dataset.p; history.replaceState(null, '', `#${key}/${pageNo[key]}`);
+    pageNo[key] = +b.dataset.p; history.replaceState(navState(), '', `#${key}/${pageNo[key]}`);
     render(); scrollTo(0, 0);
   });
 }
@@ -763,13 +1093,6 @@ function viewHistory(v){
         <td class="${ok?'ok':'bad'}" style="font-weight:600">${ok?'pass':'fail'}</td></tr>`;
     }).reverse().join('')}</tbody></table></div>`));
 
-  const b = el('<div class="row"><button class="btn ghost" id="clr">Clear history</button></div>');
-  b.querySelector('#clr').onclick = () => {
-    if (confirm('Delete all '+h.length+' recorded attempts? This cannot be undone.')) {
-      localStorage.removeItem(KEY); render();
-    }
-  };
-  v.appendChild(b);
 }
 
 /* ---------- self-check: run with ?selftest ---------- */
@@ -875,6 +1198,7 @@ const fromHash = location.hash.slice(1).split('/')[0];
 const fromPage = +location.hash.split('/')[1] || 1;       // #signs/3 opens page 3
 if (TABS.some(([k]) => k === fromHash)) tab = fromHash;
 if (pageNo[fromHash] !== undefined) pageNo[fromHash] = fromPage;
+history.replaceState({tab, d:0, sub: fromHash.startsWith('exam') ? 'exam' : undefined}, '', location.hash || '#' + tab);
 if (location.search.includes('selftest')) selftest();
 /* #exam = straight into a fresh paper. #exam-sign, #exam-trf, … = one category
    under exam conditions; those are not written to history. */
