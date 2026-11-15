@@ -170,4 +170,61 @@ function catStats(s, c){
   return {n: qs.length, seen, right, wrong, done: qs.length > 0 && seen === qs.length};
 }
 
+
+/* ---- Key numbers (content copied from the classic app's Key numbers page), grouped by kind ---- */
+const NUMBER_GROUPS = [
+  {title:'Time limits', icon:'calendar', rows:[
+    ['7 days','ticket fine payment · change of vehicle colour'],
+    ['15 days','replacement licence · vehicle transfer · appeal a suspension'],
+    ['1 month','how recent the medical certificate must be'],
+    ['90 days','window to retake a failed theory test'],
+    ['6 months','how far ahead a 5-year licence can be renewed'],
+    ['2 years','validity of the temporary licence you will be issued'],
+    ['3 years','expired beyond this = retake theory AND practical'],
+    ['5 years','private licence validity · motorcycle inspection age'],
+    ['7 years','car inspection age']]},
+  {title:'Distances', icon:'route', rows:[
+    ['25 cm','maximum distance from the kerb when parking'],
+    ['1 m','lateral gap to keep from parked and moving vehicles'],
+    ['2.50 m','maximum load overhang at the REAR'],
+    ['3 m','no parking on, or within this distance of, a pedestrian crossing'],
+    ['5 m','STOP this far short of a railway track when a train is coming'],
+    ['10 m','no parking at, or within this distance of, a junction'],
+    ['15 m','no PARKING within this distance of a railway crossing (not the same as the 5 m stop)'],
+    ['30 m','signal before a turn'],
+    ['60 m','turn signal must be visible from this far · no overtaking below this visibility'],
+    ['150 m','head and tail lights must be visible from this far']]},
+  {title:'Speed and the engine', icon:'gauge', rows:[
+    ['60 km/h','motorcycle speed in a built-up area (bank answer)'],
+    ['90 km/h','speed outside Bangkok / Pattaya / a municipality (bank answer)'],
+    ['80–95 °C','normal engine operating temperature']]},
+  {title:'Alcohol', icon:'wine', rows:[
+    ['50 mg%','the alcohol limit for an ordinary driver'],
+    ['20 mg%','the limit on a TEMPORARY licence, under 20, or with no licence: this is you']]},
+  {title:'Fines', icon:'scale', rows:[
+    ['1,000 baht','no licence · no plate · no lights in poor visibility · excessive noise'],
+    ['2,000 baht','EXPIRED licence: heavier than having none'],
+    ['200 baht','crossing outside a zebra within 100 m of one (pedestrian)'],
+    ['5,000–20,000 baht','over the alcohol limit, plus up to 1 year and a 6-month suspension'],
+    ['1% per month','surcharge on late road tax']]},
+  {title:'The test and training', icon:'clipboard-check', rows:[
+    ['50 / 45 / 60','questions / needed to pass / minutes'],
+    ['5 stations','the motorcycle practical test: plank, Z bend, S bend, obstacle, signs'],
+    ['5 hours','the DLT training course for a first-time applicant'],
+    ['15 hours','an accredited private driving-school course'],
+    ['15 / 18','minimum age: 15 for a motorcycle up to 110 cc, 18 for anything else']]}
+];
+const TRAPS = [
+  {title:'Give way to the LEFT, not the right', hot:true, text:'Two vehicles reach an unsignalised junction at the same time, nobody already in it: the vehicle on your <b>left</b> goes first (Land Traffic Act s.71(2); DLT English book p.45). Many Thai practice sites print "give way to the right" here and are wrong. In a <i>roundabout</i> the answer really is "right", for a different reason: give way to whoever is <b>already in</b> the junction (s.71(1)).'},
+  {title:'No licence vs expired licence', text:'No licence = 1 month / 1,000 baht. Expired = 2,000 baht. The heavier penalty is for the expired one.'},
+  {title:'Flashing red vs flashing amber', text:'Red = come to a full stop, then go when safe. Amber = slow down and proceed. Different answers, adjacent questions.'},
+  {title:'30 m vs 60 m vs 150 m', text:'Signal 30 m before turning; the signal must be visible from 60 m; head and tail lights from 150 m. 60 m is also the visibility below which overtaking is banned.'},
+  {title:"The officer's arms", text:'Left arm extended sideways = traffic <b>behind</b> stops. Right forearm raised, palm up = traffic <b>in front</b> stops.'},
+  {title:'"First" after a crash', text:'If the question mentions an injured person, the first act is <b>first aid</b>. If it does not, the first act is <b>warning other traffic</b>. Read the stem.'},
+  {title:'The 5 m / 15 m railway pair', text:'STOP at least 5 m short of the track when a train is coming. Never PARK within 15 m of the crossing.'},
+  {title:'Solid vs broken lines', text:'<b>Solid = prohibited, broken = permitted.</b> White separates lanes going the same way, yellow separates opposing directions. On a solid-plus-broken pair, the line on <i>your</i> side governs you.'},
+  {title:'Negative stems', text:'"ข้อใดไม่ใช่" / "which is NOT" / "which should you not do" appears often. Slow down and re-read; this is where most failures happen.'},
+  {title:'Etiquette questions', text:'The correct answer is always the longest, calmest, most other-regarding option. Never the one with the horn, high beam or acceleration.'}
+];
+
 if (typeof module !== 'undefined') module.exports = {};
