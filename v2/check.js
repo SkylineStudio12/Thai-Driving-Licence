@@ -45,6 +45,11 @@ ok(run('loadState(storage).attempts.length') === 1, 'imports attempts from the c
 const cats = run('TOPIC_GROUPS.flatMap(g => g.cats)');
 ok(cats.length === 12 && new Set(cats).size === 12 && cats.every(c => run(`!!CATS['${c}']`)), 'topic groups cover the 12 categories once');
 ok(run(`Object.keys(CATS).every(c => CAT_ICON[c] && LUCIDE[CAT_ICON[c]] && CAT_DESC[c])`), 'every category has an icon and a description');
+/* auto-next defaults, including for states saved before the setting existed */
+ok(run('freshState().autoNext === false && freshState().autoNextAsk === 0'), 'auto-next defaults');
+mem['thai-moto-v2'] = JSON.stringify({v:1, profile:{name:'A', onboarded:true}, goal:10, days:{}, q:{}, bookmarks:[], attempts:[]});
+ok(run('loadState(storage).autoNext') === false, 'old saved state gets autoNext = false');
+delete mem['thai-moto-v2'];
 /* Key numbers carries every row of the classic app's table */
 const classic = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const oldNums = [...classic.slice(classic.indexOf('const NUMBERS = ['), classic.indexOf('];', classic.indexOf('const NUMBERS = ['))).matchAll(/\['([^']+)',/g)].map(m => m[1]);
