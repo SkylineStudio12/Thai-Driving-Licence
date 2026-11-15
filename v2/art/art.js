@@ -25,7 +25,7 @@ const ART = {
   'cat-trf':         'crossroads.webp',
   'cat-veh':         'warden.webp',
   'cat-etq':         'storm.webp',
-  'cat-safe':        'steering-wheel.webp',
+  'cat-safe':        'helmet.webp',
   'cat-proc':        'theory-book.webp',
   'cat-moto':        'moto.webp'
 };
