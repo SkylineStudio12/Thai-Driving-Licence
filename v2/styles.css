@@ -121,12 +121,13 @@ div.item{cursor:default}
 .list.boxed .item + .item::before{left:62px;right:0}
 
 /* ---- Overview ---- */
-.streak .days{display:flex;gap:2px;justify-content:space-between;margin:12px -4px 0;padding:4px;overflow-x:auto;scrollbar-width:none}
+.streak .days{display:flex;gap:0;margin:12px -4px 0;padding:5px 4px;overflow:visible}
 .streak .days::-webkit-scrollbar{display:none}
-.day{flex:0 0 44px;display:flex;flex-direction:column;align-items:center;gap:4px}
-.day b{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;background:var(--tile);font-weight:600;font-size:16px;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.day{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+/* squares leave room for today's ring (4px) plus a visible gap to the neighbours */
+.day b{display:flex;align-items:center;justify-content:center;width:min(36px, calc(100% - 10px));aspect-ratio:1;height:auto;border-radius:10px;background:var(--tile);font-weight:600;font-size:15px;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
 .day.met b{background:var(--accent);color:var(--card)}
-.day.today b{box-shadow:0 0 0 2px var(--background),0 0 0 4px var(--accent)}
+.day.today b{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--accent)}
 .day.future b{opacity:.55}
 .day span{font-size:12px;color:var(--muted-foreground)}
 .continue{display:flex;align-items:center;gap:16px;cursor:pointer;width:100%;border:0;text-align:left;padding:16px 14px 16px 16px}
@@ -513,9 +514,7 @@ a.item{text-decoration:none}
   .tabbar{padding-left:12px;padding-right:12px}
   .tabbar button{font-size:11px}
   .tabbar button .lucide{width:22px;height:22px}
-  .day{flex:1 1 0;min-width:0}
-  .day b{width:100%;max-width:44px;height:40px;font-size:15px}
-  .streak .days{overflow:visible}
+  .day b{font-size:13.5px;border-radius:9px}
   .btn.chipbtn{white-space:nowrap}
   .continue .art,.topic .art{width:72px;height:72px;border-radius:18px}
   .continue .grow{min-height:72px}
