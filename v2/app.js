@@ -496,7 +496,18 @@ function viewQuiz(v){
     c.onclick = () => { z.i = k; render(); };
     chips.appendChild(c);
   });
-  requestAnimationFrame(() => { const cur = chips.children[z.i]; if (cur) chips.scrollLeft = cur.offsetLeft - chips.clientWidth / 2 + cur.offsetWidth / 2; });
+  /* The strip is rebuilt on every render, so restore where it was scrolled to instantly, then
+     glide only if the current chip is out of view (otherwise it animated from chip 1 each time). */
+  chips.style.scrollBehavior = 'auto';
+  chips.scrollLeft = z.chipScroll || 0;
+  chips.addEventListener('scroll', () => { z.chipScroll = chips.scrollLeft; }, {passive:true});
+  requestAnimationFrame(() => {
+    const cur = chips.children[z.i]; if (!cur) return;
+    const l = cur.offsetLeft, r = l + cur.offsetWidth, pad = 16;
+    if (l - pad >= chips.scrollLeft && r + pad <= chips.scrollLeft + chips.clientWidth) return;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    chips.scrollTo({left: l - chips.clientWidth / 2 + cur.offsetWidth / 2, behavior: reduce || z.chipScroll === undefined ? 'auto' : 'smooth'});
+  });
   /* options */
   const box = $('#opts', page);
   q.o.forEach((o, k) => {
