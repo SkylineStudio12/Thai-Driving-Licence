@@ -100,6 +100,7 @@ function render(){
   if (s.sub === 'cat' && CATS[s.key]) return viewTestOptions(v, s.key);
   if (s.sub === 'book' && CATS[s.key]) return viewBook(v, s.key);
   if (s.sub === 'rules') return viewRules(v);
+  if (s.sub === 'numbers') return viewNumbers(v);
   if (s.sub === 'list' && ['mistakes', 'bookmarks'].includes(s.key)) return viewList(v, s.key);
   ({overview:viewOverview, theory:viewTheory, practice:viewPractice, progress:viewProgress})[tab](v);
 }
@@ -168,7 +169,7 @@ function refreshSheet(){
   sh.querySelector('#g2').append(row('sparkles', 'Tips: sign shapes and colours', '', () => { tab = 'theory'; open('rules'); }),
     link('list-checks', 'The licence process', '../index.html#process'),
     link('languages', 'Thai phrases for the office', '../index.html#phrases'),
-    link('hash', 'Key numbers', '../index.html#numbers'));
+    row('hash', 'Key numbers', '', () => open('numbers')));
   sh.querySelector('#g3').append(row('rotate-ccw', 'Reset all progress', '', () => {
     if (!confirm('Delete your answers, streak, bookmarks and test history on this device?')) return;
     const p = S.profile; Object.assign(S, freshState(), {profile:p}); persist(); closeSheet(); render();
@@ -268,6 +269,8 @@ function viewTheory(v){
     g.appendChild(b);
   });
   v.appendChild(g);
+  v.appendChild(el('<div class="h2">Quick reference</div>'));
+  v.appendChild(listGroup([{icon:'hash', title:'Key numbers', sub:'Distances, time limits, fines and the traps', run: () => open('numbers')}]));
 }
 function viewGroup(v, key){
   const t = TOPIC_GROUPS.find(x => x.key === key);
@@ -314,6 +317,20 @@ function viewTestOptions(v, c){
   startBtn.firstChild.onclick = () => startQuiz({kind:'cat', cat:c, onlyMistakes:optMistakesOnly, shuffled:optShuffle});
   v.appendChild(startBtn); upd();
   S.lastCat = c; persist();
+}
+function viewNumbers(v){
+  chrome({title:'Key numbers', tabs:true});
+  v.appendChild(el(`<div class="card hero"><div class="grow"><h2>Learn the numbers</h2>
+    <p style="margin:0">Most of what you can lose marks on is a number. Learn these and the traps below; the rest is common sense plus the sign shapes.</p></div>${art('numbers', 'hash')}</div>`));
+  NUMBER_GROUPS.forEach(g => {
+    v.appendChild(el(`<div class="h2">${g.title}</div>`));
+    const box = el('<div class="card numbers"></div>');
+    g.rows.forEach(([n, d]) => box.appendChild(el(`<div class="num-row"><b class="num">${esc(n)}</b><span>${esc(d)}</span></div>`)));
+    v.appendChild(box);
+  });
+  v.appendChild(el('<div class="h2">The traps</div>'));
+  TRAPS.forEach((t, k) => v.appendChild(el(`<div class="card trap ${t.hot ? 'hot' : ''}"><span class="trap-n">${k + 1}</span>
+    <div><h3>${t.title}</h3><p>${t.text}</p></div></div>`)));
 }
 function viewRules(v){
   chrome({title:'Sign shapes & colours'});
@@ -664,7 +681,7 @@ function viewProgress(v){
 (function boot(){
   const [t, sub, key, i] = location.hash.slice(1).split('/');
   if (TABS.some(([k]) => k === t)) tab = t;
-  const keep = ['group', 'cat', 'book', 'rules', 'list'].includes(sub);
+  const keep = ['group', 'cat', 'book', 'rules', 'list', 'numbers'].includes(sub);
   const s = {tab, d:0, ...(keep ? {sub, key, i: i ? +i : undefined} : {})};
   history.replaceState(s, '', hashOf(s));
   render();

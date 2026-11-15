@@ -553,3 +553,18 @@ a.item{text-decoration:none}
 .avatar.empty,.big-avatar.empty{background:var(--tile, var(--muted));overflow:hidden;box-shadow:none}
 .avatar .face-img{width:40px;height:40px;object-fit:contain;margin-top:6px}
 .big-avatar .face-img{width:92px;height:92px;object-fit:contain;margin-top:16px}
+
+/* Key numbers */
+.numbers{padding:4px 18px}
+.num-row{display:flex;gap:14px;align-items:baseline;padding:12px 0}
+.num-row + .num-row{border-top:1px solid var(--border)}
+.num{flex:0 0 108px;font-size:16px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--accent)}
+.num-row span{font-size:14.5px;color:var(--foreground);line-height:1.45}
+.trap{display:flex;gap:14px;align-items:flex-start}
+.trap-n{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:999px;background:var(--tile, var(--muted));font-weight:700;font-size:14px}
+.trap.hot{box-shadow:inset 0 0 0 1.5px var(--destructive),var(--shadow)}
+.trap.hot .trap-n{background:var(--destructive);color:#fff}
+.trap h3{margin:3px 0 4px;font-size:16px;text-transform:none;letter-spacing:-.01em;color:var(--foreground)}
+.trap p{margin:0;font-size:14.5px;color:var(--muted-foreground);line-height:1.5}
+.trap p b{color:var(--foreground)}
+@media (max-width:360px){.num{flex-basis:88px;font-size:15px}}

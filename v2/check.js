@@ -45,6 +45,11 @@ ok(run('loadState(storage).attempts.length') === 1, 'imports attempts from the c
 const cats = run('TOPIC_GROUPS.flatMap(g => g.cats)');
 ok(cats.length === 12 && new Set(cats).size === 12 && cats.every(c => run(`!!CATS['${c}']`)), 'topic groups cover the 12 categories once');
 ok(run(`Object.keys(CATS).every(c => CAT_ICON[c] && LUCIDE[CAT_ICON[c]] && CAT_DESC[c])`), 'every category has an icon and a description');
+/* Key numbers carries every row of the classic app's table */
+const classic = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const oldNums = [...classic.slice(classic.indexOf('const NUMBERS = ['), classic.indexOf('];', classic.indexOf('const NUMBERS = ['))).matchAll(/\['([^']+)',/g)].map(m => m[1]);
+const v2Nums = run('NUMBER_GROUPS.flatMap(g => g.rows.map(r => r[0]))');
+ok(oldNums.length > 0 && oldNums.every(n => v2Nums.includes(n)), 'Key numbers is missing rows from the classic app');
 /* artwork listed in the manifest exists on disk */
 const art = run('ART');
 Object.values(art).forEach(f => ok(fs.existsSync(path.join(__dirname, 'art', f)), `art file missing: ${f}`));
