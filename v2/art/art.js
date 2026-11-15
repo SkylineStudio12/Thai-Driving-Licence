@@ -11,7 +11,7 @@ const ART = {
   onboarding:        'licence.webp',
   mock:              'certificate.webp',
   'result-pass':     'clipboard.webp',
-  'result-fail':     'storm.webp',
+  'result-fail':     'clipboard-fail.webp',
   'practice-theory': 'books.webp',
   'practice-signs':  'stop-sign.webp',
   'theory-hero':     'signs.webp',
@@ -25,7 +25,7 @@ const ART = {
   'cat-trf':         'crossroads.webp',
   'cat-veh':         'warden.webp',
   'cat-etq':         'storm.webp',
-  'cat-safe':        'steering-wheel.webp',
+  'cat-safe':        'helmet.webp',
   'cat-proc':        'theory-book.webp',
   'cat-moto':        'moto.webp'
 };
