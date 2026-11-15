@@ -75,7 +75,8 @@ const SIGN_RULES = [
 
 /* ---- store ---- */
 const freshState = () => ({v:1, profile:{name:'', examDate:'', vehicle:'moto', onboarded:false}, goal:15,
-  days:{}, q:{}, bookmarks:[], attempts:[], lastCat:null, showThai:true});
+  days:{}, q:{}, bookmarks:[], attempts:[], lastCat:null, showThai:true,
+  autoNext:false, autoNextAsk:0});   // auto-next after a right answer; autoNextAsk = streak at which to offer it again
 function loadState(storage){
   let s = null;
   try { s = JSON.parse(storage.getItem(STORE_KEY)); } catch (e) {}

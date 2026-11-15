@@ -568,3 +568,23 @@ a.item{text-decoration:none}
 .trap p{margin:0;font-size:14.5px;color:var(--muted-foreground);line-height:1.5}
 .trap p b{color:var(--foreground)}
 @media (max-width:360px){.num{flex-basis:88px;font-size:15px}}
+
+/* auto-next */
+/* lives in the sticky footer, above the buttons, so it is seen without scrolling */
+.qfoot{flex-wrap:wrap}
+#offer{flex:0 0 100%;order:-1}
+#offer:empty{display:none}
+.autonext-banner{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;margin:0;box-shadow:var(--shadow);padding:12px 14px;
+  border-radius:18px;background:color-mix(in srgb,var(--accent) 14%,var(--card));color:var(--foreground);animation:an-up .18s ease-out}
+.autonext-banner > .lucide{width:20px;height:20px;color:var(--accent)}
+.autonext-banner span{font-size:14px;line-height:1.4}
+.autonext-banner .row{grid-column:1 / -1;justify-content:flex-end;gap:8px}
+.autonext-banner .btn.sm{min-height:36px}
+.btn.ghost{background:none;color:var(--foreground);box-shadow:none}
+@keyframes an-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.auto-pill{font-style:normal;font-size:11px;font-weight:600;letter-spacing:.02em;padding:1px 7px;margin-left:4px;border-radius:999px;
+  background:var(--accent-soft);color:var(--accent);vertical-align:1px}
+.btn.next.pulse{animation:an-pulse .6s ease-out}
+@keyframes an-pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--primary) 45%,transparent)}100%{box-shadow:0 0 0 12px transparent}}
+.dlg-setting{margin:0 0 14px;padding:0 4px}
+@media (prefers-reduced-motion:reduce){.autonext-banner,.btn.next.pulse{animation:none}}

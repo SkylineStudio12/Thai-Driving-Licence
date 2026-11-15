@@ -89,6 +89,7 @@ const circleBtn = (icon, label, fn) => { const b = el(`<button class="circle" ar
 let tick = null;
 function render(){
   clearInterval(tick);
+  if (quiz && quiz.autoT) { clearTimeout(quiz.autoT); quiz.autoT = null; }   // never auto-advance a stale screen
   const v = $('#view'); v.innerHTML = '';
   if (!S.profile.onboarded) return viewOnboarding(v);
   const s = nav();
@@ -166,6 +167,10 @@ function refreshSheet(){
     <span class="switch"><input type="checkbox" ${S.showThai ? 'checked' : ''}><i></i></span></label>`);
   th.querySelector('input').onchange = e => { S.showThai = e.target.checked; persist(); render(); };
   g1.append(th);
+  const an = el(`<label class="item"><span class="ico">${lucide('zap')}</span><span class="txt"><b>Auto-next</b><span>Move on after a right answer</span></span>
+    <span class="switch"><input type="checkbox" ${S.autoNext ? 'checked' : ''}><i></i></span></label>`);
+  an.querySelector('input').onchange = e => { S.autoNext = e.target.checked; persist(); };
+  g1.append(an);
   sh.querySelector('#g2').append(row('sparkles', 'Tips: sign shapes and colours', '', () => { tab = 'theory'; open('rules'); }),
     link('list-checks', 'The licence process', '../index.html#process'),
     link('languages', 'Thai phrases for the office', '../index.html#phrases'),
@@ -491,14 +496,14 @@ function viewQuiz(v){
   const isLast = z.i === n - 1, bm = S.bookmarks.includes(q.id);
   const page = el(`<div class="quiz">
     <div class="qhead"><button class="circle" id="quit" aria-label="${z.mode === 'exam' ? 'Cancel exam' : 'Quit test'}">${lucide('power')}</button>
-      <div class="mid"><b id="clock">--:--</b><span>${esc(z.title)} · ${n} questions</span></div>
+      <div class="mid"><b id="clock">--:--</b><span>${esc(z.title)} · ${n} questions${z.mode === 'practice' && S.autoNext ? ' <em class="auto-pill">Auto</em>' : ''}</span></div>
       <div class="tb-r"><button class="circle" id="menu" aria-label="More">${lucide('ellipsis')}</button></div></div>
     <div class="chips" id="chips" role="list" aria-label="Questions"></div>
     <section class="qsheet" aria-label="Question ${z.i + 1} of ${n}">
       ${signPic(q)}
       <h2 class="qtext">${esc(q.en)}</h2>${S.showThai ? `<p class="th">${esc(q.th)}</p>` : ''}
       <div id="opts"></div><div id="why" aria-live="polite"></div>
-      <div class="qfoot"><button class="circle flat" id="prev" aria-label="Previous question" ${z.i ? '' : 'disabled'}>${lucide('chevron-left')}</button>
+      <div class="qfoot"><div id="offer"></div><button class="circle flat" id="prev" aria-label="Previous question" ${z.i ? '' : 'disabled'}>${lucide('chevron-left')}</button>
         <button class="circle flat ${S.showThai ? 'on' : ''}" id="thai" aria-label="${S.showThai ? 'Hide' : 'Show'} Thai text" aria-pressed="${S.showThai}">${lucide('languages')}</button>
         <button class="circle flat ${bm ? 'on' : ''}" id="bm" aria-label="Bookmark" aria-pressed="${bm}">${lucide(bm ? 'bookmark-check' : 'bookmark')}</button>
         <button class="btn next" id="next">${isLast ? (z.mode === 'exam' ? 'Submit' : 'Finish') : 'Next'} ${lucide(isLast ? 'check' : 'play', isLast ? '' : 'fill')}</button></div>
@@ -510,7 +515,7 @@ function viewQuiz(v){
     const p = z.pick[k], cls = k === z.i ? 'cur' : p === null ? '' : z.mode === 'exam' ? 'ans' : p === x.a ? 'right' : 'wrong';
     const state = {cur:', current', ans:', answered', right:', correct', wrong:', wrong'}[cls] || '';
     const c = el(`<button class="chip ${cls}" role="listitem" aria-label="Question ${k + 1}${state}" ${k === z.i ? 'aria-current="step"' : ''}>${k + 1}</button>`);
-    c.onclick = () => { z.i = k; render(); };
+    c.onclick = () => { z.flow = 0; z.i = k; render(); };
     chips.appendChild(c);
   });
   /* The strip is rebuilt on every render, so restore where it was scrolled to instantly, then
@@ -534,8 +539,17 @@ function viewQuiz(v){
       ${locked && k === q.a ? lucide('check', 'mk') : locked && k === picked ? lucide('x', 'mk') : ''}</button>`);
     b.onclick = () => {
       z.pick[z.i] = k;
-      if (z.mode === 'practice') { record(S, q.id, k === q.a); persist(); }
+      if (z.mode === 'practice') { record(S, q.id, k === q.a); persist(); z.justAnswered = z.i; }
       render();
+      /* auto-next: a right answer shows green briefly, then moves on; a wrong one waits for Next */
+      if (z.mode === 'practice' && S.autoNext) {
+        if (k === q.a) {
+          const at = z.i, reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+          quiz.autoT = setTimeout(() => { quiz.autoT = null; if (quiz === z && !z.done && z.i === at) goNext(true); }, reduce ? 700 : 500);
+        } else {
+          const nx = $('#next'); if (nx) { nx.classList.remove('pulse'); void nx.offsetWidth; nx.classList.add('pulse'); }
+        }
+      }
     };
     box.appendChild(b);
   });
@@ -543,18 +557,32 @@ function viewQuiz(v){
   /* controls */
   $('#quit', page).onclick = quitQuiz;
   $('#menu', page).onclick = () => dialog(`<h2>${esc(z.title)}</h2><p>${z.pick.filter(x => x !== null).length} of ${n} answered.</p>
+      ${z.mode === 'practice' ? `<label class="setting dlg-setting"><span>Auto-next after a right answer</span><span class="switch"><input type="checkbox" id="an" ${S.autoNext ? 'checked' : ''}><i></i></span></label>` : ''}
       <button class="btn secondary" id="fin" style="margin-bottom:10px">${z.mode === 'exam' ? 'Submit paper now' : 'Finish and see results'}</button>
       <button class="btn secondary" id="cx" style="color:var(--destructive)">${z.mode === 'exam' ? 'Cancel exam' : 'Quit test'}</button>`,
-    d => { d.querySelector('#fin').onclick = () => { d.close(); finishQuiz(); }; d.querySelector('#cx').onclick = () => { d.close(); quitQuiz(); }; });
-  $('#prev', page).onclick = () => { z.i--; render(); };
+    d => { d.querySelector('#fin').onclick = () => { d.close(); finishQuiz(); }; d.querySelector('#cx').onclick = () => { d.close(); quitQuiz(); };
+      const an = d.querySelector('#an'); if (an) an.onchange = e => { S.autoNext = e.target.checked; persist(); d.close(); render(); }; });
+  $('#prev', page).onclick = () => { z.flow = 0; z.i--; render(); };
   $('#thai', page).onclick = () => { S.showThai = !S.showThai; persist(); render(); };
   $('#bm', page).onclick = () => { toggleBookmark(S, q.id); persist(); render(); };
-  $('#next', page).onclick = () => {
+  /* Next (also used by auto-next). Answer-then-Next taps in a row build z.flow; after enough of
+     them a banner offers auto-next. */
+  function goNext(auto){
+    if (!auto && z.mode === 'practice') z.flow = z.justAnswered === z.i ? (z.flow || 0) + 1 : 0;
     if (z.i < n - 1) { z.i++; render(); scrollTo(0, 0); return; }
     const left = z.pick.filter(x => x === null).length;
     if (left && !confirm(`${left} question${left > 1 ? 's are' : ' is'} unanswered and will count as wrong. Finish anyway?`)) return;
     finishQuiz();
-  };
+  }
+  $('#next', page).onclick = () => goNext(false);
+  if (z.mode === 'practice' && !S.autoNext && (z.flow || 0) >= (S.autoNextAsk || 5)) {
+    const offer = el(`<div class="autonext-banner" role="status">${lucide('zap')}
+      <span>Answering quickly? Move on automatically after a right answer.</span>
+      <div class="row"><button class="btn sm" id="anOn">Turn on</button><button class="btn sm ghost" id="anNo">Not now</button></div></div>`);
+    offer.querySelector('#anOn').onclick = () => { S.autoNext = true; persist(); render(); };
+    offer.querySelector('#anNo').onclick = () => { S.autoNextAsk = (z.flow || 0) + 20; persist(); offer.remove(); };
+    $('#offer', page).appendChild(offer);
+  }
   /* clock: countdown for the exam, elapsed time for practice */
   const clock = $('#clock', page);
   const paint = () => {
