@@ -8,7 +8,8 @@ const $ = (q, r = document) => r.querySelector(q);
 const THAI_LETTERS = ['ก','ข','ค','ง'];
 const initials = n => (n || '').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 /* avatar content: initials, or a person glyph when no name is set */
-const avatarFace = () => initials(S.profile.name) ? esc(initials(S.profile.name)) : lucide('user', 'face');
+const avatarFace = () => initials(S.profile.name) ? esc(initials(S.profile.name))
+  : ART.avatar ? `<img class="face-img" src="art/${ART.avatar}" alt="">` : lucide('user', 'face');
 const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const smooth = () => reduceMotion() ? 'auto' : 'smooth';
 /* empty state: icon tile, title, one line of help and an optional action */
@@ -82,7 +83,7 @@ function chrome({title = '', sub = '', large = false, right = [], bare = false, 
     t.appendChild(b);
   });
 }
-const avatarBtn = () => { const b = el(`<button class="avatar" aria-label="Profile and settings">${avatarFace()}</button>`); b.onclick = openProfile; return b; };
+const avatarBtn = () => { const b = el(`<button class="avatar${initials(S.profile.name) ? '' : ' empty'}" aria-label="Profile and settings">${avatarFace()}</button>`); b.onclick = openProfile; return b; };
 const circleBtn = (icon, label, fn) => { const b = el(`<button class="circle" aria-label="${label}">${lucide(icon)}</button>`); b.onclick = fn; return b; };
 
 let tick = null;
@@ -149,7 +150,7 @@ function refreshSheet(){
   const link = (icon, label, href) => el(`<a class="item" href="${href}"><span class="ico">${lucide(icon)}</span>
       <span class="txt"><b>${label}</b></span><span class="end">${lucide('external-link', 'chev')}</span></a>`);
   sh.innerHTML = `<button class="circle close" aria-label="Close">${lucide('x')}</button>
-    <div class="profile-head"><span class="big-avatar" aria-hidden="true">${avatarFace()}</span>
+    <div class="profile-head"><span class="big-avatar${initials(S.profile.name) ? '' : ' empty'}" aria-hidden="true">${avatarFace()}</span>
       <h2>${esc(S.profile.name || 'Rider')}</h2>
       <span>${left === null ? 'No exam date set' : left > 0 ? `Exam in ${left} day${left > 1 ? 's' : ''}` : left === 0 ? 'Exam today' : 'Exam date passed'}</span></div>
     <div class="label">Personalize</div><div class="list boxed" id="g1"></div>

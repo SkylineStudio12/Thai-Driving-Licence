@@ -548,3 +548,8 @@ a.item{text-decoration:none}
 .art:not(.icon) img{object-fit:contain;filter:drop-shadow(0 6px 10px rgb(0 0 0 / .08))}
 .onb .pic .art:not(.icon){width:240px;height:220px}
 .opt-head .art:not(.icon){width:170px;height:150px}
+
+/* no name yet: the 3D person render on a neutral tile instead of initials on pink */
+.avatar.empty,.big-avatar.empty{background:var(--tile, var(--muted));overflow:hidden;box-shadow:none}
+.avatar .face-img{width:40px;height:40px;object-fit:contain;margin-top:6px}
+.big-avatar .face-img{width:92px;height:92px;object-fit:contain;margin-top:16px}
