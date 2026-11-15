@@ -542,3 +542,9 @@ a.item{text-decoration:none}
 .tile .meta{gap:8px}
 .rules-hero p{line-height:1.5}
 .rule .imgs{min-width:0;flex-wrap:wrap;align-content:center}
+
+/* artwork slots holding a real render: no tile, the render floats on the card */
+.art:not(.icon){background:none;overflow:visible;border-radius:0}
+.art:not(.icon) img{object-fit:contain;filter:drop-shadow(0 6px 10px rgb(0 0 0 / .08))}
+.onb .pic .art:not(.icon){width:240px;height:220px}
+.opt-head .art:not(.icon){width:170px;height:150px}

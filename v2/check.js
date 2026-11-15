@@ -48,6 +48,9 @@ ok(run(`Object.keys(CATS).every(c => CAT_ICON[c] && LUCIDE[CAT_ICON[c]] && CAT_D
 /* artwork listed in the manifest exists on disk */
 const art = run('ART');
 Object.values(art).forEach(f => ok(fs.existsSync(path.join(__dirname, 'art', f)), `art file missing: ${f}`));
+run('UNUSED').forEach(f => ok(fs.existsSync(path.join(__dirname, 'art', f)), `stored art file missing: ${f}`));
+const onDisk = fs.readdirSync(path.join(__dirname, 'art')).filter(f => f.endsWith('.webp'));
+onDisk.forEach(f => ok(Object.values(art).includes(f) || run('UNUSED').includes(f), `art file not listed in art.js: ${f}`));
 
 console.log(errs.length ? 'FAIL\n' + errs.join('\n') : `PASS — ${run('BANK.length')} questions, 100 papers, scoring, streak, mistakes, bookmarks, import, art`);
 process.exit(errs.length ? 1 : 0);
