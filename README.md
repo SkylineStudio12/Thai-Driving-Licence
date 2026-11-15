@@ -183,3 +183,17 @@ myPage: {title:'My page', icon:'lucide-icon-name', view: v => viewMyPage(v),
 button that opens a dialog) or `menu` (`[{label, icon, run, danger}]`, adds a kebab menu).
 Icons come from Lucide and are inlined in `LUCIDE`; copy the inner SVG of any new icon there.
 Back follows browser history, so the phone's back gesture and the top-bar Back agree.
+
+## v2 experiment
+
+`v2/index.html` (live at `/v2/`, not linked from the app) is a private redesign experiment with
+four tabs: Overview, Theory, Practice and My Progress. It reuses `bank.js`, `signs.js` and `signs/`
+and adds onboarding, a daily goal and streak, mistakes, bookmarks, practice tests with instant
+feedback, a results screen and score charts. The classic app is untouched.
+
+- Logic lives in `v2/core.js` (no DOM), screens in `v2/app.js`, the theme in `v2/styles.css`.
+- Progress is stored on the device only, under `thai-moto-v2`. Mock papers already sat in the
+  classic app are imported on first run.
+- Artwork: put an image in `v2/art/` and list it in `v2/art/art.js` under its slot name
+  (e.g. `mock`, `result-pass`, `theory-hero`, `group-law`, `cat-trf`). Unlisted slots show an icon.
+- Self-check: `node v2/check.js`.
