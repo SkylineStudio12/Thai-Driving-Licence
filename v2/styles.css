@@ -37,7 +37,7 @@ button{font:inherit;color:inherit}
 a{color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .wrap{max-width:640px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left))}
-#view{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+#view{padding-bottom:calc(96px + var(--tb-bottom))}
 body.no-tabs #view{padding-bottom:calc(32px + env(safe-area-inset-bottom))}
 body.bare #view{padding-bottom:0}
 .lucide{width:20px;height:20px;flex:0 0 auto}
@@ -65,15 +65,16 @@ body.bare #view{padding-bottom:0}
   background:var(--avatar);color:#fff;font-weight:600;font-size:16px;cursor:pointer;letter-spacing:.02em}
 
 /* ---- tab bar ---- */
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 16px calc(10px + env(safe-area-inset-bottom));pointer-events:none}
-.tabbar-row{pointer-events:auto;display:flex;gap:2px;max-width:520px;margin:0 auto;padding:5px;border-radius:999px;
+:root{--tb-bottom:max(8px, calc(env(safe-area-inset-bottom) - 13px))}   /* GitHub-style: the bar sits inside the home-indicator area */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 20px var(--tb-bottom);pointer-events:none}
+.tabbar-row{pointer-events:auto;display:flex;gap:0;max-width:560px;margin:0 auto;padding:3px;border-radius:999px;
   background:var(--tab-bg);-webkit-backdrop-filter:blur(20px) saturate(1.4);backdrop-filter:blur(20px) saturate(1.4);
   border:1px solid color-mix(in srgb,var(--border) 70%,transparent);box-shadow:0 10px 30px -10px rgb(0 0 0 / .18)}
-.tabbar button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:56px;justify-content:center;padding:6px 2px;
+.tabbar button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px;justify-content:center;padding:3px 2px;line-height:1.2;
   border:0;border-radius:999px;background:none;color:var(--muted-foreground);font-size:12px;font-weight:500;cursor:pointer;
   -webkit-tap-highlight-color:transparent}
 .tabbar button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.tabbar button .lucide{width:22px;height:22px}
+.tabbar button .lucide{width:24px;height:24px}
 .tabbar button[aria-current=page]{color:var(--foreground);background:var(--tab-active);font-weight:600}
 body.no-tabs .tabbar{display:none}
 
@@ -509,9 +510,9 @@ a.item{text-decoration:none}
 /* narrow phones (320px) */
 @media (max-width:359px){
   .topbar.large h1{font-size:30px}
-  .tabbar{padding-left:8px;padding-right:8px}
+  .tabbar{padding-left:12px;padding-right:12px}
   .tabbar button{font-size:11px}
-  .tabbar button .lucide{width:20px;height:20px}
+  .tabbar button .lucide{width:22px;height:22px}
   .day{flex:1 1 0;min-width:0}
   .day b{width:100%;max-width:44px;height:40px;font-size:15px}
   .streak .days{overflow:visible}
