@@ -194,6 +194,8 @@ feedback, a results screen and score charts. The classic app is untouched.
 - Logic lives in `v2/core.js` (no DOM), screens in `v2/app.js`, the theme in `v2/styles.css`.
 - Progress is stored on the device only, under `thai-moto-v2`. Mock papers already sat in the
   classic app are imported on first run.
-- Artwork: put an image in `v2/art/` and list it in `v2/art/art.js` under its slot name
-  (e.g. `mock`, `result-pass`, `theory-hero`, `group-law`, `cat-trf`). Unlisted slots show an icon.
+- Artwork: 3D renders in `v2/art/` (WebP), mapped to slots in `v2/art/art.js` (e.g. `mock`,
+  `result-pass`, `theory-hero`, `group-law`, `cat-trf`); one file can serve several slots. Unlisted
+  slots show an icon. Renders kept for later screens are listed in `UNUSED`; `node v2/check.js`
+  fails if a listed file is missing or a file in the folder is not listed.
 - Self-check: `node v2/check.js`.

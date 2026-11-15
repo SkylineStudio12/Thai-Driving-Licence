@@ -239,7 +239,7 @@ function viewOverview(v){
   const c = S.lastCat && CATS[S.lastCat] ? S.lastCat : Object.keys(CATS).find(k => !catStats(S, k).done) || 'trf';
   const cs = catStats(S, c);
   v.appendChild(el(`<div class="h2">${S.lastCat ? 'Continue learning' : 'Start learning'}</div>`));
-  const cc = el(`<button class="card continue">${art('continue', CAT_ICON[c])}<div class="grow"><h3>${CATS[c][0]}</h3>
+  const cc = el(`<button class="card continue">${art(ART['cat-' + c] ? 'cat-' + c : 'continue', CAT_ICON[c])}<div class="grow"><h3>${CATS[c][0]}</h3>
     <p>${CAT_DESC[c]}</p><div class="row cmeta"><div class="progress" style="flex:1"><i style="width:${pct(cs.seen, cs.n)}%"></i></div>
     <b class="small">${pct(cs.seen, cs.n)}%</b></div></div>${chev()}</button>`);
   cc.onclick = () => { tab = 'theory'; open('cat', c); };
