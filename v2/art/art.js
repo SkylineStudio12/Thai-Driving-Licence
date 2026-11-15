@@ -30,6 +30,9 @@ const ART = {
   'cat-alco':        'alcohol.webp',
   'cat-fit':         'helmet-check.webp',
   'cat-aid':         'first-aid.webp',
+  'cat-maint':       'tools.webp',
+  goal:              'calendar-goal.webp',
+  avatar:            'user.webp',
   'cat-moto':        'moto.webp'
 };
 /* stored for later screens (e.g. hazard clips), not used yet */
