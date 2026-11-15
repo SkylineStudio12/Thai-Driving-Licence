@@ -11,7 +11,7 @@ const ART = {
   onboarding:        'licence.webp',
   mock:              'certificate.webp',
   'result-pass':     'clipboard.webp',
-  'result-fail':     'storm.webp',
+  'result-fail':     'clipboard-fail.webp',
   'practice-theory': 'books.webp',
   'practice-signs':  'stop-sign.webp',
   'theory-hero':     'signs.webp',
