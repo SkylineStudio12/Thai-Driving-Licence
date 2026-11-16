@@ -165,5 +165,7 @@ Three things to know about that material:
 - `art/` — 3D renders (WebP), mapped to slots in `art/art.js`; one file can serve several slots and
   unlisted slots show an icon. Renders kept for later are listed in `UNUSED`; `node check.js`
   fails if a listed file is missing or a file in the folder is not listed.
+- `icons/` and `manifest.webmanifest` — the app icon (Home Screen, browser tab, Android install),
+  generated from the motorcycle render.
 - `bank.js`, `signs.js`, `signs/` — the question bank and the sign artwork;
   `3.ExamEnglish_6382.pdf` must stay beside `index.html`.
