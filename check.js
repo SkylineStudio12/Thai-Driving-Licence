@@ -87,5 +87,11 @@ run('UNUSED').forEach(f => ok(fs.existsSync(path.join(__dirname, 'art', f)), `st
 const onDisk = fs.readdirSync(path.join(__dirname, 'art')).filter(f => f.endsWith('.webp'));
 onDisk.forEach(f => ok(Object.values(art).includes(f) || run('UNUSED').includes(f), `art file not listed in art.js: ${f}`));
 
+/* app icons and manifest */
+['icons/apple-touch-icon.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/favicon-32.png', 'manifest.webmanifest']
+  .forEach(f => ok(fs.existsSync(path.join(root, f)), `missing ${f}`));
+const mf = JSON.parse(fs.readFileSync(path.join(root, 'manifest.webmanifest'), 'utf8'));
+mf.icons.forEach(i => ok(fs.existsSync(path.join(root, i.src)), `manifest icon missing: ${i.src}`));
+
 console.log(errs.length ? 'FAIL\n' + errs.join('\n') : `PASS — ${run('BANK.length')} questions, 100 papers, scoring, streak, mistakes, bookmarks, import, art`);
 process.exit(errs.length ? 1 : 0);
