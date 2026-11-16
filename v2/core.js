@@ -241,4 +241,75 @@ const TRAPS = [
   {title:'Etiquette questions', text:'The correct answer is always the longest, calmest, most other-regarding option. Never the one with the horn, high beam or acceleration.'}
 ];
 
+
+/* ---- content moved from the classic app: sign gallery, phrases, official material ---- */
+const FAM_TITLE = {
+  priority:  ['Right of way',            'ป้ายบังคับประเภทกำหนดสิทธิ์'],
+  prohibit:  ['Prohibitions',            'ป้ายห้าม'],
+  noturn:    ['No turning / no U-turn',  'ป้ายห้ามเลี้ยวและห้ามกลับรถ'],
+  novehicle: ['Vehicles banned',         'ป้ายห้ามรถผ่าน'],
+  speed:     ['Speed — maximum vs minimum','จำกัดความเร็ว / ความเร็วขั้นต่ำ'],
+  limit:     ['Weight and size limits',  'ป้ายจำกัดน้ำหนักและขนาด'],
+  direction: ['Commands: direction',     'ป้ายบังคับประเภทคำสั่ง'],
+  lane:      ['Reserved lanes',          'ป้ายช่องเดินรถ'],
+  endzone:   ['End of restriction',      'สุดเขตบังคับ'],
+  curve:     ['Warning: bends',          'ป้ายเตือนทางโค้ง'],
+  junction:  ['Warning: junctions',      'ป้ายเตือนทางแยก'],
+  narrow:    ['Warning: narrowing & closed lanes','ป้ายเตือนทางแคบ'],
+  rail:      ['Warning: level crossings','ป้ายเตือนทางรถไฟ'],
+  gradient:  ['Warning: gradients',      'ป้ายเตือนทางลาดชัน'],
+  surface:   ['Warning: road surface',   'ป้ายเตือนสภาพผิวทาง'],
+  laneflow:  ['Warning: merging & carriageways','ป้ายเตือนการรวมช่องจราจร'],
+  uturn:     ['Warning: U-turn points',  'ป้ายเตือนจุดกลับรถ'],
+  aheadwarn: ['Warning: what is ahead',  'ป้ายเตือนล่วงหน้า'],
+  people:    ['Warning: people & animals','ป้ายเตือนคนและสัตว์'],
+  marker:    ['Alignment & obstruction markers','เตือนแนวทางและสิ่งกีดขวาง'],
+  workwarn:  ['Roadworks: pictogram warnings','ป้ายเตือนในงานก่อสร้าง (ตก)'],
+  divert:    ['Roadworks: diversions',    'เบี่ยงเบนการจราจร'],
+  work:      ['Roadworks: text signs',    'ป้ายข้อความในงานก่อสร้าง (ตค)'],
+  guide:     ['Guide & information signs','ป้ายแนะนำ']
+};
+const SIGN_GROUPS = [
+  {key:'regulatory', title:'Regulatory', th:'ป้ายบังคับ', img:'bo-01', desc:'Must and must-not: right of way, bans, limits, commands',
+   fams:['priority','prohibit','noturn','novehicle','speed','limit','direction','lane','endzone']},
+  {key:'warning', title:'Warning', th:'ป้ายเตือน', img:'to-11', desc:'Yellow diamonds and markers: what is coming up',
+   fams:['curve','junction','narrow','rail','gradient','surface','laneflow','uturn','aheadwarn','people','marker']},
+  {key:'roadworks', title:'Roadworks', th:'ป้ายในงานก่อสร้าง', img:'tg-03', desc:'Orange, temporary: pictograms, diversions, text signs',
+   fams:['workwarn','divert','work']},
+  {key:'guide', title:'Guide & information', th:'ป้ายแนะนำ', img:null, desc:'Directions, places and services',
+   fams:['guide']}
+];
+const famGroup = f => SIGN_GROUPS.find(g => g.fams.includes(f));
+/* inside a group the "Warning: " / "Roadworks: " prefix is already said by the group */
+const famName = f => { const n = FAM_TITLE[f][0].replace(/^(Warning|Roadworks): /, ''); return n[0].toUpperCase() + n.slice(1); };
+const famSigns = f => SIGNS.filter(s => s.fam === f);
+const PHRASES = [
+ ['ผมมาทำใบขับขี่รถจักรยานยนต์ครับ','phom maa tham bai-kap-kee rot jak-kra-yaan-yon khrap',
+  'I am here to get a motorcycle licence.'],
+ ['ขอสอบเป็นภาษาอังกฤษได้ไหมครับ','khaw sawp pen paa-saa ang-krit dai mai khrap',
+  'Can I take the test in English?'],
+ ['ผมไม่พูดภาษาไทยครับ ขอโทษครับ','phom mai puut paa-saa thai khrap, khaw thoot khrap',
+  'I do not speak Thai. Sorry.'],
+ ['อบรม 5 ชั่วโมง วันไหนครับ','ob-rom haa chua-mong wan nai khrap',
+  'Which day is the 5-hour course?'],
+ ['ผมจองคิวออนไลน์มาแล้วครับ','phom jong kiu on-line maa laew khrap',
+  'I already booked online.'],
+ ['เอกสารครบไหมครับ','eek-ka-saan khrop mai khrap',
+  'Are my documents complete?'],
+ ['ต้องใช้เอกสารอะไรอีกครับ','tong chai eek-ka-saan a-rai eek khrap',
+  'What other documents do I need?'],
+ ['ใบรับรองแพทย์','bai rap-rong paet','medical certificate'],
+ ['หนังสือรับรองที่พักอาศัย','nang-sue rap-rong tee pak aa-sai','certificate of residence'],
+ ['ใบอนุญาตทำงาน','bai a-nu-yaat tham ngaan','work permit'],
+ ['สอบข้อเขียน','sawp khaw-khian','written test'],
+ ['สอบปฏิบัติ','sawp pa-ti-bat','practical test'],
+ ['ผ่าน / ไม่ผ่าน','paan / mai paan','pass / fail'],
+ ['สอบใหม่ได้เมื่อไหร่ครับ','sawp mai dai muea-rai khrap','When can I retake it?'],
+ ['ค่าธรรมเนียมเท่าไหร่ครับ','kha tham-niam tao-rai khrap','How much is the fee?'],
+ ['ช่องไหนครับ','chong nai khrap','Which counter / window?'],
+ ['รอที่นี่ใช่ไหมครับ','ror tee nee chai mai khrap','Do I wait here?'],
+ ['ขอบคุณครับ','khop khun khrap','Thank you.']
+];
+const RES = {pdf:'3.ExamEnglish_6382.pdf', video:'https://youtu.be/HdmqNfGZ9Is'};
+
 if (typeof module !== 'undefined') module.exports = {};

@@ -588,3 +588,25 @@ a.item{text-decoration:none}
 @keyframes an-pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--primary) 45%,transparent)}100%{box-shadow:0 0 0 12px transparent}}
 .dlg-setting{margin:0 0 14px;padding:0 4px}
 @media (prefers-reduced-motion:reduce){.autonext-banner,.btn.next.pulse{animation:none}}
+
+/* pages moved from the classic app */
+.prose h3{margin:0 0 8px;font-size:16px;text-transform:none;letter-spacing:-.01em;color:var(--foreground)}
+.prose p{margin:0 0 12px;font-size:14.5px;line-height:1.55}
+.prose p:last-child{margin-bottom:0}
+.prose a{color:var(--accent);font-weight:500}
+.prose.note{box-shadow:inset 0 0 0 1.5px var(--warning),var(--shadow)}
+.steps p{position:relative;padding-left:40px}
+.step-n{position:absolute;left:0;top:0;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;
+  background:var(--accent);color:var(--card);font-weight:700;font-size:14px}
+.phrases{padding:4px 18px}
+.phrase{display:grid;gap:2px;padding:12px 0}
+.phrase + .phrase{border-top:1px solid var(--border)}
+.phrase b{font-size:17px;font-weight:600}
+.phrase i{font-size:13.5px;color:var(--muted-foreground)}
+.phrase span{font-size:14.5px}
+.item .ico.pic{background:#fff;padding:4px}
+.item .ico.pic img{width:100%;height:100%;object-fit:contain}
+.sign-card{display:flex;gap:14px;align-items:flex-start}
+.sign-card img{flex:0 0 84px;width:84px;height:84px;object-fit:contain;background:#fff;border-radius:14px;padding:6px;border:1px solid var(--border)}
+.sign-card b{font-size:15.5px}
+.sign-card p{margin:0;font-size:14px;color:var(--muted-foreground);line-height:1.5}

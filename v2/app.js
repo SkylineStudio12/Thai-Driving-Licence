@@ -6,6 +6,7 @@ const el = h => { const d = document.createElement('div'); d.innerHTML = h.trim(
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $ = (q, r = document) => r.querySelector(q);
 const THAI_LETTERS = ['ก','ข','ค','ง'];
+const ART_ROOT = '../';   // where bank/signs/handbook live relative to this page
 const initials = n => (n || '').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 /* avatar content: initials, or a person glyph when no name is set */
 const avatarFace = () => initials(S.profile.name) ? esc(initials(S.profile.name))
@@ -102,6 +103,11 @@ function render(){
   if (s.sub === 'book' && CATS[s.key]) return viewBook(v, s.key);
   if (s.sub === 'rules') return viewRules(v);
   if (s.sub === 'numbers') return viewNumbers(v);
+  if (s.sub === 'process') return viewProcess(v);
+  if (s.sub === 'phrases') return viewPhrases(v);
+  if (s.sub === 'gallery') return viewGallery(v);
+  if (s.sub === 'sgroup' && SIGN_GROUPS.some(g => g.key === s.key)) return viewSignGroupList(v, s.key);
+  if (s.sub === 'fam' && FAM_TITLE[s.key]) return viewSignFamily(v, s.key);
   if (s.sub === 'list' && ['mistakes', 'bookmarks'].includes(s.key)) return viewList(v, s.key);
   ({overview:viewOverview, theory:viewTheory, practice:viewPractice, progress:viewProgress})[tab](v);
 }
@@ -172,13 +178,13 @@ function refreshSheet(){
   an.querySelector('input').onchange = e => { S.autoNext = e.target.checked; persist(); };
   g1.append(an);
   sh.querySelector('#g2').append(row('sparkles', 'Tips: sign shapes and colours', '', () => { tab = 'theory'; open('rules'); }),
-    link('list-checks', 'The licence process', '../index.html#process'),
-    link('languages', 'Thai phrases for the office', '../index.html#phrases'),
+    row('list-checks', 'The licence process', '', () => open('process')),
+    row('languages', 'Thai phrases for the office', '', () => open('phrases')),
     row('hash', 'Key numbers', '', () => open('numbers')));
   sh.querySelector('#g3').append(row('rotate-ccw', 'Reset all progress', '', () => {
     if (!confirm('Delete your answers, streak, bookmarks and test history on this device?')) return;
     const p = S.profile; Object.assign(S, freshState(), {profile:p}); persist(); closeSheet(); render();
-  }, 'bad'), link('external-link', 'Open the classic app', '../index.html'));
+  }, 'bad'));
 }
 
 /* ================= onboarding ================= */
@@ -275,7 +281,11 @@ function viewTheory(v){
   });
   v.appendChild(g);
   v.appendChild(el('<div class="h2">Quick reference</div>'));
-  v.appendChild(listGroup([{icon:'hash', title:'Key numbers', sub:'Distances, time limits, fines and the traps', run: () => open('numbers')}]));
+  v.appendChild(listGroup([
+    {icon:'hash', title:'Key numbers', sub:'Distances, time limits, fines and the traps', run: () => open('numbers')},
+    {icon:'signpost', title:'Sign gallery', sub:`All ${SIGNS.length} signs, by group and family`, run: () => open('gallery')},
+    {icon:'list-checks', title:'The licence process', sub:'Documents, the four steps, the riding test', run: () => open('process')},
+    {icon:'languages', title:'Thai phrases', sub:'What to say at the DLT counter', run: () => open('phrases')}]));
 }
 function viewGroup(v, key){
   const t = TOPIC_GROUPS.find(x => x.key === key);
@@ -337,12 +347,105 @@ function viewNumbers(v){
   TRAPS.forEach((t, k) => v.appendChild(el(`<div class="card trap ${t.hot ? 'hot' : ''}"><span class="trap-n">${k + 1}</span>
     <div><h3>${t.title}</h3><p>${t.text}</p></div></div>`)));
 }
+/* ---- pages moved from the classic app ---- */
+const officialCard = () => `<div class="card prose"><h3>Official material</h3>
+  <p><a href="${ART_ROOT}${RES.pdf}" download>Download the DLT English exam handbook (PDF)</a><br>
+  <span class="muted small">The source behind the road markings, junction rules and parking distances here.</span></p>
+  <p style="margin-bottom:0"><a href="${RES.video}" target="_blank" rel="noopener">Watch: the motorcycle driving test, by the DLT (YouTube)</a><br>
+  <span class="muted small">Thai audio. Opens in a new tab and needs internet.</span></p></div>`;
+function viewProcess(v){
+  chrome({title:'The licence process'});
+  v.innerHTML = `${officialCard()}
+  <div class="card prose"><p><b>Bangkok offices.</b> Chatuchak (Area 1, ตลาดนัดจตุจักร / Phahonyothin) and Bang Khun Thian (Area 3)
+    are the two that regularly deal with foreigners; Area 2 (Taling Chan) and Area 4 (Nong Khaem) also issue licences.
+    Book a slot on <b>DLT Smart Queue</b>: the <i>DLT Smart Queue</i> app or <a href="https://gecc.dlt.go.th" target="_blank" rel="noopener">gecc.dlt.go.th</a>.
+    Walk-ins are possible but you may be turned away by 09:00.</p></div>
+  <div class="card prose note"><p><b>Phone the office before you go</b> and ask two things: (1) is the theory test terminal
+    available in English today, and (2) which proof of address they will accept from you. Both vary by office and by who is on
+    the desk. This one call is worth more than anything else on this page.</p></div>
+  <div class="h2">What you need to bring</div>
+  <div class="card prose">
+    <p><b>Passport</b>: original plus a photocopy of the photo page and of your current visa / entry stamp. Sign every copy.</p>
+    <p><b>Proof of address in Thailand</b>: any ONE of a <i>Certificate of Residence</i> from Immigration (Chaeng Watthana; small fee,
+      sometimes same-day, sometimes a week), a residence letter from your embassy, a valid <i>work permit</i>, a <i>pink ID card</i>,
+      or a <i>yellow house book</i> (ทะเบียนบ้านเหลือง). A work permit is the smoothest if you have one.</p>
+    <p><b>Medical certificate</b> (ใบรับรองแพทย์): issued within the last <b>1 month</b>, on the 5-disease form. Any clinic,
+      100–200 baht, 15 minutes. Do not get it weeks early.</p>
+    <p><b>Two passport photos</b>: some offices photograph you on site, some still want prints. Bring them.</p>
+    <p><b>Money</b>: cash. The motorcycle licence fee is about 105 baht, plus small charges for the test and the card.</p></div>
+  <div class="h2">The four steps, in order</div>
+  <div class="card prose steps">
+    <p><span class="step-n">1</span><b>Physical / ability test</b> (ทดสอบสมรรถภาพร่างกาย): four short machine tests: colour recognition
+      (red / amber / green), depth perception (line up two poles at a distance), peripheral vision, and brake reaction time.
+      No Thai needed; the staff will mime it. If you wear glasses, wear them.</p>
+    <p><span class="step-n">2</span><b>The 5-hour theory course</b> (อบรม 5 ชั่วโมง): mandatory for a first-time licence. Held at the
+      office, usually one full morning-to-afternoon block, or online through the DLT e-learning system. <b>It is delivered in Thai.</b>
+      You must be present for all five hours; they check. Bring something to read, and do not leave early: no certificate, no test.</p>
+    <p><span class="step-n">3</span><b>The written theory test</b>: 50 questions on a touchscreen, 60 minutes, delivered as two blocks
+      of 25. You need 45 right. English is normally selectable at the terminal in Bangkok. Fail and you can usually retry the next
+      working day, and within 90 days without repeating the course.</p>
+    <p><span class="step-n">4</span><b>The practical riding test</b>: five stations, in this order: balance along a narrow raised plank
+      without putting a foot down, a Z bend, an S bend, obstacle avoidance, and riding a short circuit while obeying the signs,
+      signals and indicators. Bring your own bike if you can, or use theirs. <b>The plank is what fails people.</b> Look up and far
+      ahead, stay in a high enough gear to avoid stalling, feather the clutch, and do not look down at the plank.</p></div>
+  <div class="h2">What you get</div>
+  <div class="card prose"><p>A <b>2-year temporary licence</b> (ใบอนุญาตขับรถชั่วคราว). After that you convert it to the 5-year private
+    licence, a much shorter appointment: no theory test, no practical, just a 1-hour refresher and the ability test. You can start
+    that conversion up to 6 months before it expires.</p></div>
+  <div class="card prose note"><p><b>One correction worth knowing.</b> If you hold a home-country licence <i>with a motorcycle
+    category</i>, or an International Driving Permit covering motorcycles, the DLT can waive both the written and the practical
+    test. A car-only licence buys you nothing here: a Thai motorcycle licence is a separate class and must be earned separately.</p></div>`;
+}
+function viewPhrases(v){
+  chrome({title:'Thai phrases'});
+  v.appendChild(el(`<div class="card prose"><p>The desk staff will get you through this even with no shared language, but these
+    lines remove almost all of the friction. End every sentence with the polite particle: <b>ครับ (khrap)</b> if you are a man,
+    <b>ค่ะ (kha)</b> if you are a woman. The phrases below use ผม (phom, "I", male); a woman says ดิฉัน (di-chan) or ฉัน (chan).</p></div>`));
+  const box = el('<div class="card phrases"></div>');
+  PHRASES.forEach(([t, r, e]) => box.appendChild(el(`<div class="phrase"><b lang="th">${esc(t)}</b><i>${esc(r)}</i><span>${esc(e)}</span></div>`)));
+  v.appendChild(box);
+}
+/* sign gallery: groups -> families -> every sign (including the recognise-only ones) */
+function viewGallery(v){
+  chrome({title:'Sign gallery'});
+  v.appendChild(el(`<p class="muted" style="margin:6px 2px 0">All ${SIGNS.length} signs as the real DLT artwork, grouped the way the exam confuses them on purpose.</p>`));
+  const g = el('<div class="list boxed" style="margin-top:12px"></div>');
+  SIGN_GROUPS.forEach(x => {
+    const n = x.fams.reduce((a, f) => a + famSigns(f).length, 0);
+    const img = x.img ? `signs/${x.img}.png` : famSigns(x.fams[0])[0].img;
+    const b = el(`<button class="item"><span class="ico pic"><img src="${ART_ROOT}${img}" alt=""></span>
+      <span class="txt"><b>${x.title}</b><span>${S.showThai ? x.th : x.desc}</span></span><span class="end">${n}${chev()}</span></button>`);
+    b.onclick = () => x.fams.length === 1 ? open('fam', x.fams[0]) : open('sgroup', x.key);
+    g.appendChild(b);
+  });
+  v.appendChild(g);
+}
+function viewSignGroupList(v, key){
+  const x = SIGN_GROUPS.find(y => y.key === key);
+  chrome({title:x.title});
+  v.appendChild(el(`<p class="muted" style="margin:6px 2px 0">${S.showThai ? x.th + ' · ' : ''}${x.desc}</p>`));
+  const g = el('<div class="list boxed" style="margin-top:12px"></div>');
+  x.fams.forEach(f => { const fs = famSigns(f);
+    const b = el(`<button class="item"><span class="ico pic"><img src="${ART_ROOT}${fs[0].img}" alt=""></span>
+      <span class="txt"><b>${famName(f)}</b>${S.showThai ? `<span>${FAM_TITLE[f][1]}</span>` : ''}</span><span class="end">${fs.length}${chev()}</span></button>`);
+    b.onclick = () => open('fam', f);
+    g.appendChild(b); });
+  v.appendChild(g);
+}
+function viewSignFamily(v, f){
+  chrome({title:famName(f)});
+  const fs = famSigns(f);
+  v.appendChild(el(`<p class="muted" style="margin:6px 2px 0">${famGroup(f).title} · ${S.showThai ? FAM_TITLE[f][1] + ' · ' : ''}${fs.length} signs</p>`));
+  fs.forEach(s => v.appendChild(el(`<div class="card sign-card"><img src="${ART_ROOT}${s.img}" alt="Thai road sign ${esc(s.code)}">
+    <div><b>${esc(s.en)}</b> <span class="pill">${esc(s.code)}</span>${s.gallery ? ' <span class="pill">recognise only</span>' : ''}
+      <div class="muted" lang="th" style="margin:2px 0 6px">${esc(s.th)}</div><p>${esc(s.w)}</p></div></div>`)));
+}
 function viewRules(v){
   chrome({title:'Sign shapes & colours'});
   v.appendChild(el(`<div class="card hero rules-hero"><div class="grow"><h2>All ${SIGNS.length} signs</h2>
     <p style="margin:0">As the real DLT artwork: <b>บ-</b> regulatory, <b>ต-</b> warning, <b>ตก-</b> roadworks pictograms, <b>ตค-</b> roadworks text, <b>น-</b> guide. Signs are the cheapest marks on the paper: they are pictures, so the language barrier does not apply.</p></div></div>`));
   v.appendChild(el('<div class="h2">Learn the logic first</div>'));
-  SIGN_RULES.forEach(r => v.appendChild(el(`<div class="card rule"><div class="imgs ${r.imgs.length > 2 ? 'three' : ''}">${r.imgs.map(i => `<img src="../signs/${i}.png" alt="">`).join('')}</div>
+  SIGN_RULES.forEach(r => v.appendChild(el(`<div class="card rule"><div class="imgs ${r.imgs.length > 2 ? 'three' : ''}">${r.imgs.map(i => `<img src="${ART_ROOT}signs/${i}.png" alt="">`).join('')}</div>
     <div style="flex:1;min-width:0"><div class="top"><h3>${r.title}</h3><span class="pill">${r.badge}</span></div>
     <p>${S.showThai && r.th ? r.th + '. ' : ''}${r.text}</p></div></div>`)));
   const b = el(`<div class="rules-cta"><button class="btn">Practise road signs ${lucide('chevron-right')}</button></div>`);
@@ -351,7 +454,7 @@ function viewRules(v){
 }
 
 /* Theory book: answers and reasons, one swipeable card at a time; viewing marks a question seen */
-const signPic = q => q.img ? `<div class="media"><img class="sign" src="../${q.img}" alt="Thai road sign ${esc(q.code || '')}"></div>` : '';
+const signPic = q => q.img ? `<div class="media"><img class="sign" src="${ART_ROOT}${q.img}" alt="Thai road sign ${esc(q.code || '')}"></div>` : '';
 function qCard(q, picked, opts = {}){
   const status = picked === undefined ? '' : picked === null ? ['skip', 'Not answered'] : picked === q.a ? ['ok', 'Correct'] : ['bad', 'Wrong'];
   const c = el(`<article class="card qcard-r">
@@ -440,7 +543,7 @@ function viewList(v, kind){
                                                    : `${ids.length} saved question${ids.length > 1 ? 's' : ''}.`}</p>`));
   const g = el('<div class="list boxed qlist"></div>');
   ids.forEach(id => { const q = BY_ID[id];
-    g.appendChild(el(`<div class="item"><span class="ico ${q.img ? 'pic' : ''}">${q.img ? `<img src="../${q.img}" alt="">` : lucide(CAT_ICON[q.c])}</span>
+    g.appendChild(el(`<div class="item"><span class="ico ${q.img ? 'pic' : ''}">${q.img ? `<img src="${ART_ROOT}${q.img}" alt="">` : lucide(CAT_ICON[q.c])}</span>
       <span class="txt"><b>${esc(q.sign ? q.sign.en : q.en)}</b><span>${CATS[q.c][0]}</span></span></div>`)); });
   const b = el(`<button class="btn list-cta">Practise these ${ids.length} ${lucide('play', 'fill')}</button>`);
   b.onclick = () => startQuiz({kind, ids});
@@ -709,7 +812,7 @@ function viewProgress(v){
 (function boot(){
   const [t, sub, key, i] = location.hash.slice(1).split('/');
   if (TABS.some(([k]) => k === t)) tab = t;
-  const keep = ['group', 'cat', 'book', 'rules', 'list', 'numbers'].includes(sub);
+  const keep = ['group', 'cat', 'book', 'rules', 'list', 'numbers', 'process', 'phrases', 'gallery', 'sgroup', 'fam'].includes(sub);
   const s = {tab, d:0, ...(keep ? {sub, key, i: i ? +i : undefined} : {})};
   history.replaceState(s, '', hashOf(s));
   render();
