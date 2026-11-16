@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "maps-reviews-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "kv_namespaces": [
+    // Create with: npx wrangler kv namespace create CACHE
+    // then paste the printed id here.
+    { "binding": "CACHE", "id": "REPLACE_WITH_KV_NAMESPACE_ID" }
+  ],
+  "vars": {
+    "SERPAPI_BASE": "https://serpapi.com/search.json"
+  }
+  // Secrets (set with `npx wrangler secret put <NAME>`):
+  //   SERPAPI_KEY   - required, your SerpApi API key
+  //   ACCESS_TOKEN  - optional, if set the endpoint is /mcp/<ACCESS_TOKEN>
+}
