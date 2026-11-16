@@ -1,6 +1,4 @@
-/* v2 core: data and rules, no DOM. Loaded after ../bank.js and ../signs.js, and by check.js in node.
-   The paper-building and sign-option logic is copied from ../index.html on purpose, so the live
-   app is not refactored by this experiment. */
+/* core: data and rules, no DOM. Loaded after bank.js and signs.js, and by check.js in node. */
 
 const CATS = {
   veh:  ['Vehicle law',   'กฎหมายว่าด้วยรถยนต์'],
@@ -63,7 +61,20 @@ SIGNS.filter(s => !s.gallery).forEach(s => {
 });
 BANK.forEach((q,i) => q.id = i);
 const BY_ID = Object.fromEntries(BANK.map(q => [q.id, q]));
-const freshen = qs => { qs.forEach(q => { if (q.sign) Object.assign(q, signOpts(q.sign)); }); return qs; };
+/* Every question's options are reshuffled each time it is drawn, so position can never be
+   learned instead of the answer. Sign questions get fresh distractors too. An option that refers
+   to the others ("None of the above", "ถูกทุกข้อ") stays last, where its meaning depends on it. */
+const PINNED_OPT = /of the above|of these|ทุกข้อ|ไม่มีข้อใด/i;
+function shuffleOpts(q){
+  if (q.sign) { Object.assign(q, signOpts(q.sign)); return q; }
+  const right = q.o[q.a];
+  const loose = q.o.filter(o => !PINNED_OPT.test(o[1]) && !PINNED_OPT.test(o[0]));
+  const pinned = q.o.filter(o => PINNED_OPT.test(o[1]) || PINNED_OPT.test(o[0]));
+  q.o = shuffle(loose.slice()).concat(pinned);
+  q.a = q.o.indexOf(right);
+  return q;
+}
+const freshen = qs => { qs.forEach(shuffleOpts); return qs; };
 
 const SIGN_RULES = [
   {imgs:['bo-04','bo-01','bo-02'], title:'Red ring, octagon or triangle', th:'ป้ายบังคับ', text:'Enforceable: you must, or must not.', badge:'Rule'},
@@ -89,6 +100,19 @@ function loadState(storage){
     } catch (e) {}
   }
   return Object.assign(freshState(), s);
+}
+/* Export / import: the whole state as a JSON file, so progress survives a new phone, a cleared
+   browser or a deleted Home Screen icon. parseImport throws a readable message on a bad file. */
+const exportState = s => JSON.stringify({app:'thai-moto', exported:new Date().toISOString(), state:s}, null, 1);
+function parseImport(text){
+  let o; try { o = JSON.parse(text); } catch (e) { throw new Error('This is not a progress file.'); }
+  const st = o && o.app === 'thai-moto' ? o.state : o;
+  if (!st || st.v !== 1 || typeof st.profile !== 'object' || typeof st.q !== 'object' || !Array.isArray(st.attempts))
+    throw new Error('This file is not a Thai Moto Licence progress file.');
+  const out = Object.assign(freshState(), st);
+  out.bookmarks = (out.bookmarks || []).filter(id => BY_ID[id]);
+  out.q = Object.fromEntries(Object.entries(out.q).filter(([id]) => BY_ID[id]));
+  return out;
 }
 function saveState(storage, s){ try { storage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) {} }
 
@@ -227,5 +251,76 @@ const TRAPS = [
   {title:'Negative stems', text:'"ข้อใดไม่ใช่" / "which is NOT" / "which should you not do" appears often. Slow down and re-read; this is where most failures happen.'},
   {title:'Etiquette questions', text:'The correct answer is always the longest, calmest, most other-regarding option. Never the one with the horn, high beam or acceleration.'}
 ];
+
+
+/* ---- content moved from the classic app: sign gallery, phrases, official material ---- */
+const FAM_TITLE = {
+  priority:  ['Right of way',            'ป้ายบังคับประเภทกำหนดสิทธิ์'],
+  prohibit:  ['Prohibitions',            'ป้ายห้าม'],
+  noturn:    ['No turning / no U-turn',  'ป้ายห้ามเลี้ยวและห้ามกลับรถ'],
+  novehicle: ['Vehicles banned',         'ป้ายห้ามรถผ่าน'],
+  speed:     ['Speed — maximum vs minimum','จำกัดความเร็ว / ความเร็วขั้นต่ำ'],
+  limit:     ['Weight and size limits',  'ป้ายจำกัดน้ำหนักและขนาด'],
+  direction: ['Commands: direction',     'ป้ายบังคับประเภทคำสั่ง'],
+  lane:      ['Reserved lanes',          'ป้ายช่องเดินรถ'],
+  endzone:   ['End of restriction',      'สุดเขตบังคับ'],
+  curve:     ['Warning: bends',          'ป้ายเตือนทางโค้ง'],
+  junction:  ['Warning: junctions',      'ป้ายเตือนทางแยก'],
+  narrow:    ['Warning: narrowing & closed lanes','ป้ายเตือนทางแคบ'],
+  rail:      ['Warning: level crossings','ป้ายเตือนทางรถไฟ'],
+  gradient:  ['Warning: gradients',      'ป้ายเตือนทางลาดชัน'],
+  surface:   ['Warning: road surface',   'ป้ายเตือนสภาพผิวทาง'],
+  laneflow:  ['Warning: merging & carriageways','ป้ายเตือนการรวมช่องจราจร'],
+  uturn:     ['Warning: U-turn points',  'ป้ายเตือนจุดกลับรถ'],
+  aheadwarn: ['Warning: what is ahead',  'ป้ายเตือนล่วงหน้า'],
+  people:    ['Warning: people & animals','ป้ายเตือนคนและสัตว์'],
+  marker:    ['Alignment & obstruction markers','เตือนแนวทางและสิ่งกีดขวาง'],
+  workwarn:  ['Roadworks: pictogram warnings','ป้ายเตือนในงานก่อสร้าง (ตก)'],
+  divert:    ['Roadworks: diversions',    'เบี่ยงเบนการจราจร'],
+  work:      ['Roadworks: text signs',    'ป้ายข้อความในงานก่อสร้าง (ตค)'],
+  guide:     ['Guide & information signs','ป้ายแนะนำ']
+};
+const SIGN_GROUPS = [
+  {key:'regulatory', title:'Regulatory', th:'ป้ายบังคับ', img:'bo-01', desc:'Must and must-not: right of way, bans, limits, commands',
+   fams:['priority','prohibit','noturn','novehicle','speed','limit','direction','lane','endzone']},
+  {key:'warning', title:'Warning', th:'ป้ายเตือน', img:'to-11', desc:'Yellow diamonds and markers: what is coming up',
+   fams:['curve','junction','narrow','rail','gradient','surface','laneflow','uturn','aheadwarn','people','marker']},
+  {key:'roadworks', title:'Roadworks', th:'ป้ายในงานก่อสร้าง', img:'tg-03', desc:'Orange, temporary: pictograms, diversions, text signs',
+   fams:['workwarn','divert','work']},
+  {key:'guide', title:'Guide & information', th:'ป้ายแนะนำ', img:null, desc:'Directions, places and services',
+   fams:['guide']}
+];
+const famGroup = f => SIGN_GROUPS.find(g => g.fams.includes(f));
+/* inside a group the "Warning: " / "Roadworks: " prefix is already said by the group */
+const famName = f => { const n = FAM_TITLE[f][0].replace(/^(Warning|Roadworks): /, ''); return n[0].toUpperCase() + n.slice(1); };
+const famSigns = f => SIGNS.filter(s => s.fam === f);
+const PHRASES = [
+ ['ผมมาทำใบขับขี่รถจักรยานยนต์ครับ','phom maa tham bai-kap-kee rot jak-kra-yaan-yon khrap',
+  'I am here to get a motorcycle licence.'],
+ ['ขอสอบเป็นภาษาอังกฤษได้ไหมครับ','khaw sawp pen paa-saa ang-krit dai mai khrap',
+  'Can I take the test in English?'],
+ ['ผมไม่พูดภาษาไทยครับ ขอโทษครับ','phom mai puut paa-saa thai khrap, khaw thoot khrap',
+  'I do not speak Thai. Sorry.'],
+ ['อบรม 5 ชั่วโมง วันไหนครับ','ob-rom haa chua-mong wan nai khrap',
+  'Which day is the 5-hour course?'],
+ ['ผมจองคิวออนไลน์มาแล้วครับ','phom jong kiu on-line maa laew khrap',
+  'I already booked online.'],
+ ['เอกสารครบไหมครับ','eek-ka-saan khrop mai khrap',
+  'Are my documents complete?'],
+ ['ต้องใช้เอกสารอะไรอีกครับ','tong chai eek-ka-saan a-rai eek khrap',
+  'What other documents do I need?'],
+ ['ใบรับรองแพทย์','bai rap-rong paet','medical certificate'],
+ ['หนังสือรับรองที่พักอาศัย','nang-sue rap-rong tee pak aa-sai','certificate of residence'],
+ ['ใบอนุญาตทำงาน','bai a-nu-yaat tham ngaan','work permit'],
+ ['สอบข้อเขียน','sawp khaw-khian','written test'],
+ ['สอบปฏิบัติ','sawp pa-ti-bat','practical test'],
+ ['ผ่าน / ไม่ผ่าน','paan / mai paan','pass / fail'],
+ ['สอบใหม่ได้เมื่อไหร่ครับ','sawp mai dai muea-rai khrap','When can I retake it?'],
+ ['ค่าธรรมเนียมเท่าไหร่ครับ','kha tham-niam tao-rai khrap','How much is the fee?'],
+ ['ช่องไหนครับ','chong nai khrap','Which counter / window?'],
+ ['รอที่นี่ใช่ไหมครับ','ror tee nee chai mai khrap','Do I wait here?'],
+ ['ขอบคุณครับ','khop khun khrap','Thank you.']
+];
+const RES = {pdf:'3.ExamEnglish_6382.pdf', video:'https://youtu.be/HdmqNfGZ9Is'};
 
 if (typeof module !== 'undefined') module.exports = {};

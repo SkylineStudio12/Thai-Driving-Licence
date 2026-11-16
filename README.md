@@ -1,34 +1,26 @@
 # Thai motorcycle licence — theory trainer
 
-Live: https://ramidzpower.github.io/thai-moto-license/
+Live: https://skylinestudio12.github.io/Thai-Driving-Licence/
 
-Open `index.html` in any browser. No server, no internet, no build. Styled with the shadcn/ui design system (neutral theme, light and dark), ported to plain CSS in `index.html`. Works on a phone
-(AirDrop the folder, or put it in iCloud Drive and open from Files).
+Open `index.html` in any browser. No server, no build, works offline once loaded, and is designed
+for a phone (light and dark). Progress is stored on the device only.
 
-- **Mock exam** — 50 questions, 60-minute timer, no feedback until you submit, 45/50 to pass.
-  Every wrong answer comes back with an explanation, and you can re-drill just those.
-- **Study** — the whole bank by category, answers and reasons shown, one question card at a time: swipe left or right (or use the arrows / arrow keys) to move between them.
-- **Alcohol & drugs · Fitness to ride · First aid** — three new categories covering the topics you
-  remembered from the real exam: the alcohol limits, whether a given medical condition disqualifies
-  you, and which casualty carry suits which injury.
-- **Signs** — 220 signs as the real artwork, twelve to a page, grouped by the families the exam confuses on
-  purpose, with the shape and colour logic that lets you answer signs you have never seen.
-- **Road markings** — the ป้าย-on-the-tarmac category, straight out of the official handbook.
-- **Key numbers** — the memorisation core, plus the traps that actually fail people.
-- **The process** — documents, the four steps, what the 5 practical stations are.
-- **Official material** — a card on the mock start screen and the top of The process tab, linking
-  the handbook PDF (`3.ExamEnglish_6382.pdf`, must stay beside `index.html`) and the DLT's own
-  YouTube video on the motorcycle driving test.
-- **Thai phrases** — what to say at the counter.
-- **History** — every attempt, scored per category, with a chart and your weakest areas.
+- **Overview** — daily goal and week streak, continue where you left off, quick links.
+- **Theory** — the 12 categories in four groups, each with a swipeable answer book and a test,
+  plus quick reference: **Key numbers** (and the traps), the **Sign gallery** (all 220 signs by
+  group and family), **The licence process** (documents, the four steps, the official handbook PDF
+  and DLT video) and **Thai phrases** for the counter.
+- **Practice** — practice tests with instant feedback and the reason, optional auto-next,
+  mistakes and bookmarks, marathon, and the **mock exam**: 50 questions, 60 minutes, 45 to pass,
+  no feedback until you submit.
+- **My Progress** — score charts per month for theory, practice and mock exams.
 
-435 questions (231 written + 204 signs). Run `index.html?selftest` (or `node check.js`) to verify
-the bank, the artwork, the generated sign options, the gallery-only rule and the scoring.
+435 questions (231 written + 204 signs). Every time a question is drawn its options are
+reshuffled, so you learn the answer, not its position. `node check.js` verifies the bank, the
+paper building and scoring, the shuffling, streaks, the stored data and the artwork.
 
-Handy URLs: `index.html#signs/rules`, `index.html#signs/warning`, `index.html#signs/marker` and `index.html#study/trf/2` open a Signs page, a sign group, a sign family or a Study category at that page (the address
-updates as you page, so a reload or a shared link lands in the same place); `index.html#exam` drops straight into a fresh paper; `index.html#exam-sign` (or
-`-mark`, `-alco`, `-fit`, `-aid`, `-trf`, `-veh`, `-etq`, `-safe`, `-maint`, `-moto`, `-proc`)
-drills one category under exam conditions without writing to your history.
+Mock papers sat in the original version of this app (stored under `thai-moto-progress`) are
+imported into My Progress on first run.
 
 ## The official DLT handbook
 
@@ -162,40 +154,16 @@ Three things to know about that material:
   extracted cleanly. Their *rules* are in the bank as self-contained questions; the picture-only
   phrasings are not.
 
-## Adding a page
+## How it is built
 
-Every screen shares one skeleton. Top-level pages (the tab-bar destinations) have a large
-left-aligned title and no Back; deeper pages get a top bar (Back on the left, the title in the
-middle). Either can carry an optional kebab menu or help button on the right, the content area, and the section tab bar
-at the bottom: a floating bar with a round **Start exam** button in the middle. Sections that do
-not fit go under its last item, **More**; `NAV_ORDER` sets which ones stay in the bar first. While a
-paper is running the tab bar and Back are hidden, and the only way out is **Cancel exam** in the
-top-right menu, which lands on History.
-
-To add a section, add an entry to `PAGES` in `index.html` and its key to `NAV_ORDER`:
-
-```js
-myPage: {title:'My page', icon:'lucide-icon-name', view: v => viewMyPage(v),
-         meta: () => ({help:{title:'About this page', body:'<p>…</p>'}})},
-```
-
-`meta()` is optional and can return `title` (overrides the bar title), `help` (adds a help
-button that opens a dialog) or `menu` (`[{label, icon, run, danger}]`, adds a kebab menu).
-Icons come from Lucide and are inlined in `LUCIDE`; copy the inner SVG of any new icon there.
-Back follows browser history, so the phone's back gesture and the top-bar Back agree.
-
-## v2 experiment
-
-`v2/index.html` (live at `/v2/`, not linked from the app) is a private redesign experiment with
-four tabs: Overview, Theory, Practice and My Progress. It reuses `bank.js`, `signs.js` and `signs/`
-and adds onboarding, a daily goal and streak, mistakes, bookmarks, practice tests with instant
-feedback, a results screen and score charts. The classic app is untouched.
-
-- Logic lives in `v2/core.js` (no DOM), screens in `v2/app.js`, the theme in `v2/styles.css`.
-- Progress is stored on the device only, under `thai-moto-v2`. Mock papers already sat in the
-  classic app are imported on first run.
-- Artwork: 3D renders in `v2/art/` (WebP), mapped to slots in `v2/art/art.js` (e.g. `mock`,
-  `result-pass`, `theory-hero`, `group-law`, `cat-trf`); one file can serve several slots. Unlisted
-  slots show an icon. Renders kept for later screens are listed in `UNUSED`; `node v2/check.js`
+- `core.js` — data and rules, no DOM: categories, paper building, option shuffling, scoring,
+  the stored state (`thai-moto-v2`), streaks, Key numbers, the sign gallery and phrases.
+- `app.js` — the screens and navigation. Each screen is a browser-history entry, so the phone's
+  back gesture and the top-bar Back agree; deeper pages have their own URL (for example
+  `#theory/numbers`, `#theory/gallery`, `#theory/book/trf/3`).
+- `styles.css` — the theme (shadcn-style tokens, light and dark); `icons.js` — inlined Lucide icons.
+- `art/` — 3D renders (WebP), mapped to slots in `art/art.js`; one file can serve several slots and
+  unlisted slots show an icon. Renders kept for later are listed in `UNUSED`; `node check.js`
   fails if a listed file is missing or a file in the folder is not listed.
-- Self-check: `node v2/check.js`.
+- `bank.js`, `signs.js`, `signs/` — the question bank and the sign artwork;
+  `3.ExamEnglish_6382.pdf` must stay beside `index.html`.

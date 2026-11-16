@@ -1,4 +1,4 @@
-/* Artwork manifest: slot name -> file in v2/art/. One file can serve several slots.
+/* Artwork manifest: slot name -> file in art/. One file can serve several slots.
    Any slot not listed shows a tinted Lucide icon instead.
    Slots: onboarding, goal, continue, theory-hero, mock, result-pass, result-fail,
           practice-theory, practice-signs, group-<signs|law|riding|health>,
