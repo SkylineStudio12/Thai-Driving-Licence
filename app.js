@@ -6,7 +6,7 @@ const el = h => { const d = document.createElement('div'); d.innerHTML = h.trim(
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $ = (q, r = document) => r.querySelector(q);
 const THAI_LETTERS = ['ก','ข','ค','ง'];
-const ART_ROOT = '../';   // where bank/signs/handbook live relative to this page
+const ART_ROOT = '';      // where bank/signs/handbook live relative to this page
 const initials = n => (n || '').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 /* avatar content: initials, or a person glyph when no name is set */
 const avatarFace = () => initials(S.profile.name) ? esc(initials(S.profile.name))
@@ -72,7 +72,7 @@ function chrome({title = '', sub = '', large = false, right = [], bare = false, 
   $('#title').textContent = title;
   $('#topbar').classList.toggle('two-line', !!sub);
   if (sub) $('#title').appendChild(el(`<small>${esc(sub)}</small>`));
-  document.title = `${title || 'Theory Trainer'} · v2`;
+  document.title = `${title || 'Theory Trainer'} · Thai Moto Licence`;
   backBtn.hidden = large;
   const r = $('#tbRight'); r.innerHTML = '';
   right.forEach(b => r.appendChild(b));

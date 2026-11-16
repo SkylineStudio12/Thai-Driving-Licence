@@ -1,6 +1,4 @@
-/* v2 core: data and rules, no DOM. Loaded after ../bank.js and ../signs.js, and by check.js in node.
-   The paper-building and sign-option logic is copied from ../index.html on purpose, so the live
-   app is not refactored by this experiment. */
+/* core: data and rules, no DOM. Loaded after bank.js and signs.js, and by check.js in node. */
 
 const CATS = {
   veh:  ['Vehicle law',   'กฎหมายว่าด้วยรถยนต์'],
