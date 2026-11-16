@@ -101,6 +101,19 @@ function loadState(storage){
   }
   return Object.assign(freshState(), s);
 }
+/* Export / import: the whole state as a JSON file, so progress survives a new phone, a cleared
+   browser or a deleted Home Screen icon. parseImport throws a readable message on a bad file. */
+const exportState = s => JSON.stringify({app:'thai-moto', exported:new Date().toISOString(), state:s}, null, 1);
+function parseImport(text){
+  let o; try { o = JSON.parse(text); } catch (e) { throw new Error('This is not a progress file.'); }
+  const st = o && o.app === 'thai-moto' ? o.state : o;
+  if (!st || st.v !== 1 || typeof st.profile !== 'object' || typeof st.q !== 'object' || !Array.isArray(st.attempts))
+    throw new Error('This file is not a Thai Moto Licence progress file.');
+  const out = Object.assign(freshState(), st);
+  out.bookmarks = (out.bookmarks || []).filter(id => BY_ID[id]);
+  out.q = Object.fromEntries(Object.entries(out.q).filter(([id]) => BY_ID[id]));
+  return out;
+}
 function saveState(storage, s){ try { storage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) {} }
 
 const dayKey = d => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`; };

@@ -185,6 +185,32 @@ function refreshSheet(){
     if (!confirm('Delete your answers, streak, bookmarks and test history on this device?')) return;
     const p = S.profile; Object.assign(S, freshState(), {profile:p}); persist(); closeSheet(); render();
   }, 'bad'));
+  sh.querySelector('#g3').prepend(
+    row('download', 'Export progress', '', exportProgress),
+    row('upload', 'Import progress', '', importProgress));
+}
+function exportProgress(){
+  const blob = new Blob([exportState(S)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `thai-moto-progress-${dayKey(Date.now())}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+function importProgress(){
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json,application/json';
+  inp.onchange = () => {
+    const f = inp.files[0]; if (!f) return;
+    f.text().then(t => {
+      let st; try { st = parseImport(t); } catch (e) { alert(e.message); return; }
+      const n = Object.keys(st.q).length, a = st.attempts.length;
+      if (!confirm(`Replace the progress on this device with this file?\n${st.profile.name || 'Rider'} · ${n} questions answered · ${a} tests`)) return;
+      Object.keys(S).forEach(k => delete S[k]); Object.assign(S, st); persist();
+      closeSheet(); history.replaceState({tab:'overview', d:0}, '', '#overview'); tab = 'overview'; render(); scrollTo(0, 0);
+    });
+  };
+  inp.click();
 }
 
 /* ================= onboarding ================= */

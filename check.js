@@ -64,6 +64,10 @@ const shuf = run(`(() => {
 ok(shuf.lost === 0, `shuffling changed the right answer ${shuf.lost} times`);
 ok(shuf.pinOk, '"None/All of the above" options must stay last');
 ok(shuf.fixed === 0, `${shuf.fixed} written questions never moved their answer in 200 shuffles`);
+/* export -> import round-trips; a foreign file is refused */
+run(`var st2 = freshState(); st2.profile.name = 'T'; record(st2, 4, true, Date.now()); st2.bookmarks.push(7, 99999);`);
+ok(run('(() => { const r = parseImport(exportState(st2)); return r.profile.name === "T" && r.q[4].right === 1 && r.bookmarks.length === 1; })()'), 'export/import round-trip');
+ok(run('(() => { try { parseImport("{\\"a\\":1}"); return false; } catch (e) { return true; } })()'), 'import must refuse a foreign file');
 /* auto-next defaults, including for states saved before the setting existed */
 ok(run('freshState().autoNext === false && freshState().autoNextAsk === 0'), 'auto-next defaults');
 mem['thai-moto-v2'] = JSON.stringify({v:1, profile:{name:'A', onboarded:true}, goal:10, days:{}, q:{}, bookmarks:[], attempts:[]});
