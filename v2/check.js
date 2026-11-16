@@ -45,6 +45,25 @@ ok(run('loadState(storage).attempts.length') === 1, 'imports attempts from the c
 const cats = run('TOPIC_GROUPS.flatMap(g => g.cats)');
 ok(cats.length === 12 && new Set(cats).size === 12 && cats.every(c => run(`!!CATS['${c}']`)), 'topic groups cover the 12 categories once');
 ok(run(`Object.keys(CATS).every(c => CAT_ICON[c] && LUCIDE[CAT_ICON[c]] && CAT_DESC[c])`), 'every category has an icon and a description');
+/* options are reshuffled every draw: the right answer survives, position varies, pinned stay last */
+const shuf = run(`(() => {
+  const written = BANK.filter(q => !q.sign);
+  const keep = written.map(q => q.o[q.a][1]);
+  const pos = {}; let lost = 0, pinOk = true;
+  for (let t = 0; t < 200; t++) {
+    freshen(written);
+    written.forEach((q, i) => {
+      if (q.o[q.a][1] !== keep[i]) lost++;
+      (pos[q.id] = pos[q.id] || new Set()).add(q.a);
+      q.o.forEach((o, k) => { if (PINNED_OPT.test(o[1]) && k !== q.o.length - 1) pinOk = false; });
+    });
+  }
+  const fixed = written.filter(q => pos[q.id].size === 1 && !q.o.some(o => PINNED_OPT.test(o[1]) && o === q.o[q.a])).length;
+  return {lost, pinOk, fixed, n: written.length};
+})()`);
+ok(shuf.lost === 0, `shuffling changed the right answer ${shuf.lost} times`);
+ok(shuf.pinOk, '"None/All of the above" options must stay last');
+ok(shuf.fixed === 0, `${shuf.fixed} written questions never moved their answer in 200 shuffles`);
 /* auto-next defaults, including for states saved before the setting existed */
 ok(run('freshState().autoNext === false && freshState().autoNextAsk === 0'), 'auto-next defaults');
 mem['thai-moto-v2'] = JSON.stringify({v:1, profile:{name:'A', onboarded:true}, goal:10, days:{}, q:{}, bookmarks:[], attempts:[]});

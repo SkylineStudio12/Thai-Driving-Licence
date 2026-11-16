@@ -673,9 +673,20 @@ function signImg(q, px){
 /* ---------- MOCK EXAM ---------- */
 function pool(){ return BANK.filter(q => !(excludeCarOnly && q.car)); }
 
-/* sign options are rebuilt every time the sign is drawn, so repeated papers
-   never let you learn "the answer is ค" instead of learning the sign */
-const freshen = qs => { qs.forEach(q => { if (q.sign) Object.assign(q, signOpts(q.sign)); }); return qs; };
+/* Every question's options are reshuffled each time it is drawn, so position can never be
+   learned instead of the answer. Sign questions get fresh distractors too. An option that refers
+   to the others ("None of the above", "ถูกทุกข้อ") stays last, where its meaning depends on it. */
+const PINNED_OPT = /of the above|of these|ทุกข้อ|ไม่มีข้อใด/i;
+function shuffleOpts(q){
+  if (q.sign) { Object.assign(q, signOpts(q.sign)); return q; }
+  const right = q.o[q.a];
+  const loose = q.o.filter(o => !PINNED_OPT.test(o[1]) && !PINNED_OPT.test(o[0]));
+  const pinned = q.o.filter(o => PINNED_OPT.test(o[1]) || PINNED_OPT.test(o[0]));
+  q.o = shuffle(loose.slice()).concat(pinned);
+  q.a = q.o.indexOf(right);
+  return q;
+}
+const freshen = qs => { qs.forEach(shuffleOpts); return qs; };
 
 function buildPaper(onlyIds){
   if (onlyIds) return freshen(shuffle(BANK.filter(q => onlyIds.includes(q.id))).slice(0, TOTAL));

@@ -63,7 +63,20 @@ SIGNS.filter(s => !s.gallery).forEach(s => {
 });
 BANK.forEach((q,i) => q.id = i);
 const BY_ID = Object.fromEntries(BANK.map(q => [q.id, q]));
-const freshen = qs => { qs.forEach(q => { if (q.sign) Object.assign(q, signOpts(q.sign)); }); return qs; };
+/* Every question's options are reshuffled each time it is drawn, so position can never be
+   learned instead of the answer. Sign questions get fresh distractors too. An option that refers
+   to the others ("None of the above", "ถูกทุกข้อ") stays last, where its meaning depends on it. */
+const PINNED_OPT = /of the above|of these|ทุกข้อ|ไม่มีข้อใด/i;
+function shuffleOpts(q){
+  if (q.sign) { Object.assign(q, signOpts(q.sign)); return q; }
+  const right = q.o[q.a];
+  const loose = q.o.filter(o => !PINNED_OPT.test(o[1]) && !PINNED_OPT.test(o[0]));
+  const pinned = q.o.filter(o => PINNED_OPT.test(o[1]) || PINNED_OPT.test(o[0]));
+  q.o = shuffle(loose.slice()).concat(pinned);
+  q.a = q.o.indexOf(right);
+  return q;
+}
+const freshen = qs => { qs.forEach(shuffleOpts); return qs; };
 
 const SIGN_RULES = [
   {imgs:['bo-04','bo-01','bo-02'], title:'Red ring, octagon or triangle', th:'ป้ายบังคับ', text:'Enforceable: you must, or must not.', badge:'Rule'},
