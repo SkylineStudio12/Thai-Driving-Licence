@@ -613,7 +613,8 @@ function finishQuiz(){
   clearInterval(tick);
   const r = score(quiz.qs, quiz.pick);
   if (quiz.mode === 'exam') quiz.qs.forEach((q, k) => { if (quiz.pick[k] !== null) record(S, q.id, quiz.pick[k] === q.a); });
-  const a = {when:new Date().toISOString(), mode:quiz.mode, kind:quiz.cfg.kind, cat:quiz.cfg.cat || null, score:r.score, of:r.of, byCat:r.byCat};
+  const a = {when:new Date().toISOString(), mode:quiz.mode, kind:quiz.cfg.kind, cat:quiz.cfg.cat || null, score:r.score, of:r.of, byCat:r.byCat,
+             ...(quiz.cfg.onlyMistakes ? {review:true} : {})};
   S.attempts.push(a); persist();
   quiz.done = true; quiz.result = r; quiz.attempt = a;
   history.replaceState({...nav(), sub:'result'}, '', '#result');
@@ -788,7 +789,7 @@ function viewProgress(v){
   const opts = progTab === 'theory' ? [['all', 'All topics'], ...Object.keys(CATS).map(c => [c, CATS[c][0]])]
              : progTab === 'practice' ? [['all', 'All practice'], ['random', 'Quiz & random'], ['mistakes', 'Mistakes'], ['bookmarks', 'Bookmarks'], ['marathon', 'Marathon']]
              : [['all', 'All mock papers']];
-  const att = S.attempts.filter(a => progTab === 'exam' ? a.mode === 'exam'
+  const att = S.attempts.filter(a => !isReview(a)).filter(a => progTab === 'exam' ? a.mode === 'exam'
       : progTab === 'theory' ? a.mode === 'practice' && a.kind === 'cat' && (progFilter === 'all' || a.cat === progFilter)
       : a.mode === 'practice' && a.kind !== 'cat' && (progFilter === 'all' || a.kind === progFilter));
   const now = new Date(), cur = progMonth || new Date(now.getFullYear(), now.getMonth(), 1);

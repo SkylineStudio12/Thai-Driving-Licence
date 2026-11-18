@@ -188,6 +188,11 @@ const passed = a => a.mode === 'exam' ? a.score >= (a.of === TOTAL ? PASS : Math
                                       : a.score / a.of >= PRACTICE_PASS;
 
 /* per-category numbers for the Theory screens */
+/* A "Show only mistaken questions" test is a review of a handful of questions, not a measure of
+   the topic, so it stays out of the progress charts. New attempts carry review:true; older ones
+   are recognised by having fewer questions than the smallest full test of that topic. */
+const fullCatSize = c => BANK.filter(q => q.c === c && !q.car).length;
+const isReview = a => !!a.review || (a.kind === 'cat' && !!a.cat && !!CATS[a.cat] && a.of < fullCatSize(a.cat));
 function catStats(s, c){
   const qs = pool(s).filter(q => q.c === c);
   let seen = 0, right = 0, wrong = 0;
