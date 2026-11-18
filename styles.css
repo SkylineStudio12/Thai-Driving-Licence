@@ -610,3 +610,7 @@ a.item{text-decoration:none}
 .sign-card img{flex:0 0 84px;width:84px;height:84px;object-fit:contain;background:#fff;border-radius:14px;padding:6px;border:1px solid var(--border)}
 .sign-card b{font-size:15.5px}
 .sign-card p{margin:0;font-size:14px;color:var(--muted-foreground);line-height:1.5}
+
+/* completed ring: check instead of 100% */
+.ring.done{background:var(--accent-soft)}
+.ring .lucide.ok{position:relative;inset:auto;width:20px;height:20px;stroke-width:2.75;color:var(--accent);transform:none}
