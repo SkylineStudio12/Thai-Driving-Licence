@@ -317,7 +317,7 @@ function viewGroup(v, key){
   const t = TOPIC_GROUPS.find(x => x.key === key);
   const st = t.cats.map(c => catStats(S, c));
   const n = st.reduce((a, x) => a + x.n, 0), seen = st.reduce((a, x) => a + x.seen, 0), sp = pct(seen, n);
-  chrome({title:t.title, right:[el(ring(sp, `${sp}% of this group's questions seen`))]});
+  chrome({title:t.title, right:[el(ring(seen, n, 'group'))]});
   v.appendChild(el(`<div class="stats">${[['Topics', t.cats.length], ['Questions', n], ['Seen', seen], ['Not seen', n - seen]]
     .map(([l, x]) => `<div class="stat"><span>${l}</span><b>${x}</b></div>`).join('')}</div>`));
   t.cats.forEach((c, k) => {
@@ -331,12 +331,18 @@ function viewGroup(v, key){
   });
 }
 let optMistakesOnly = false, optShuffle = true;
-/* small progress ring for the top bar: share of the category's questions seen */
-const ring = (p, label) => `<span class="ring" role="img" aria-label="${label}"><svg viewBox="0 0 44 44" aria-hidden="true">
-  <circle cx="22" cy="22" r="19"/>${p ? `<circle class="on" cx="22" cy="22" r="19" pathLength="100" stroke-dasharray="${p} 100"/>` : ''}</svg><b>${p}%</b></span>`;
+/* small progress ring for the top bar: share of the questions seen. When every question has been
+   seen it shows a check instead of "100%" (too wide for the ring); a rounded 100 that is not
+   complete shows 99%, so the check always means done. */
+function ring(seen, n, what){
+  const done = n > 0 && seen >= n, p = done ? 100 : Math.min(pct(seen, n), 99);
+  const label = done ? `All of this ${what}'s questions seen` : `${p}% of this ${what}'s questions seen`;
+  return `<span class="ring ${done ? 'done' : ''}" role="img" aria-label="${label}"><svg viewBox="0 0 44 44" aria-hidden="true">
+  <circle cx="22" cy="22" r="19"/>${p ? `<circle class="on" cx="22" cy="22" r="19" pathLength="100" stroke-dasharray="${p} 100"/>` : ''}</svg>${done ? lucide('check', 'ok') : `<b>${p}%</b>`}</span>`;
+}
 function viewTestOptions(v, c){
   const s = catStats(S, c), seen = pct(s.seen, s.n);
-  chrome({title:'Practice', sub:'Test options', tabs:false, right:[el(ring(seen, `${seen}% of this topic's questions seen`))]});
+  chrome({title:'Practice', sub:'Test options', tabs:false, right:[el(ring(s.seen, s.n, 'topic'))]});
   v.appendChild(el(`<div class="opt-head">${art('cat-' + c, CAT_ICON[c])}<h2>${CATS[c][0]}</h2>
     <button class="link" id="book">Theory book ${lucide('chevron-right')}</button></div>`));
   v.querySelector('#book').onclick = () => open('book', c);
@@ -735,11 +741,14 @@ function viewResult(v){
     <div class="scale"><div class="ends"><span>0</span><b>${p}%</b><span>100</span></div>
       <div class="track ${ok ? '' : 'fail'}" role="img" aria-label="Score ${p}%, pass mark ${mark}%"><i style="width:${Math.max(p, 3)}%"></i><span class="mark" style="left:calc(5px + (100% - 10px) * ${mark / 100})"></span></div>
       <div class="cap">${z.mode === 'exam' ? 'Exam' : 'Practice'} pass mark: ${mark}%</div></div></div>`));
-  const two = el(`<div class="two pinned"><button class="btn secondary" id="rv">Review answers</button><button class="btn" id="nx">Next test</button></div>`);
+  /* Close returns to where the test was started (test options, Practice, Mistakes...), so the
+     learner picks what to do next; "Restart" in the top bar still re-runs the same test. */
+  const two = el(`<div class="two pinned"><button class="btn secondary" id="rv">Review answers</button><button class="btn" id="cl">${z.mode === 'exam' ? 'Close exam' : 'Close test'}</button></div>`);
   two.querySelector('#rv').onclick = () => open('review');
-  two.querySelector('#nx').onclick = () => startQuiz(z.cfg, true);
+  two.querySelector('#cl').onclick = closeResult;
   v.appendChild(two);
 }
+function closeResult(){ quiz = null; back(); }
 function viewReview(v){
   const z = quiz, wrong = z.qs.map((q, k) => [q, z.pick[k], k]).filter(([q, p]) => p !== q.a);
   chrome({title:'Review answers', sub:`${z.result.score} of ${z.result.of} correct`, tabs:false});
