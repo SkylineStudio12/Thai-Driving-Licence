@@ -68,6 +68,9 @@ ok(shuf.fixed === 0, `${shuf.fixed} written questions never moved their answer i
 run(`var st2 = freshState(); st2.profile.name = 'T'; record(st2, 4, true, Date.now()); st2.bookmarks.push(7, 99999);`);
 ok(run('(() => { const r = parseImport(exportState(st2)); return r.profile.name === "T" && r.q[4].right === 1 && r.bookmarks.length === 1; })()'), 'export/import round-trip');
 ok(run('(() => { try { parseImport("{\\"a\\":1}"); return false; } catch (e) { return true; } })()'), 'import must refuse a foreign file');
+/* mistakes-only reviews stay out of the charts: flagged new ones and recognised old ones */
+ok(run(`isReview({kind:'cat', cat:'trf', of:1, score:0}) && isReview({kind:'cat', cat:'trf', of:44, review:true})
+  && !isReview({kind:'cat', cat:'trf', of:fullCatSize('trf')}) && !isReview({kind:'exam', of:50}) && !isReview({kind:'random', of:20})`), 'review tests must be kept out of the charts');
 /* auto-next defaults, including for states saved before the setting existed */
 ok(run('freshState().autoNext === false && freshState().autoNextAsk === 0'), 'auto-next defaults');
 mem['thai-moto-v2'] = JSON.stringify({v:1, profile:{name:'A', onboarded:true}, goal:10, days:{}, q:{}, bookmarks:[], attempts:[]});
