@@ -2,6 +2,9 @@
 
 Live: https://skylinestudio12.github.io/Thai-Driving-Licence/
 
+Based on [ramidzpower/thai-moto-license](https://github.com/RamiDzPower/thai-moto-license), which
+supplied the bilingual question bank, the 220 sign artworks and the DLT handbook research. Thank you!
+
 Open `index.html` in any browser. No server, no build, works offline once loaded, and is designed
 for a phone (light and dark). Progress is stored on the device only.
 
