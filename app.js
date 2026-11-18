@@ -735,11 +735,14 @@ function viewResult(v){
     <div class="scale"><div class="ends"><span>0</span><b>${p}%</b><span>100</span></div>
       <div class="track ${ok ? '' : 'fail'}" role="img" aria-label="Score ${p}%, pass mark ${mark}%"><i style="width:${Math.max(p, 3)}%"></i><span class="mark" style="left:calc(5px + (100% - 10px) * ${mark / 100})"></span></div>
       <div class="cap">${z.mode === 'exam' ? 'Exam' : 'Practice'} pass mark: ${mark}%</div></div></div>`));
-  const two = el(`<div class="two pinned"><button class="btn secondary" id="rv">Review answers</button><button class="btn" id="nx">Next test</button></div>`);
+  /* Close returns to where the test was started (test options, Practice, Mistakes...), so the
+     learner picks what to do next; "Restart" in the top bar still re-runs the same test. */
+  const two = el(`<div class="two pinned"><button class="btn secondary" id="rv">Review answers</button><button class="btn" id="cl">${z.mode === 'exam' ? 'Close exam' : 'Close test'}</button></div>`);
   two.querySelector('#rv').onclick = () => open('review');
-  two.querySelector('#nx').onclick = () => startQuiz(z.cfg, true);
+  two.querySelector('#cl').onclick = closeResult;
   v.appendChild(two);
 }
+function closeResult(){ quiz = null; back(); }
 function viewReview(v){
   const z = quiz, wrong = z.qs.map((q, k) => [q, z.pick[k], k]).filter(([q, p]) => p !== q.a);
   chrome({title:'Review answers', sub:`${z.result.score} of ${z.result.of} correct`, tabs:false});
